@@ -6,6 +6,8 @@
 <meta name="theme-color" content="#1e3a5f">
 <title>Trekr : j'ai 40 minutes</title>
 <meta name="description" content="Dites combien de temps vous avez. Trekr compose un parcours à pied, minute par minute, loin des lieux où tout le monde va, et vous ramène à l'heure.">
+<link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
+<script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" defer></script>
 <style>
 :root{--bg:#fff;--fg:#14202e;--muted:#5b6876;--line:#e3e7ec;--card:#f6f8fa;--accent:#fd490f;--marine:#1e3a5f;--ok:#12784a;--okbg:#e4f5ec;--warn:#8a3b12;--warnbg:#fbeee4}
 @media (prefers-color-scheme:dark){:root{--bg:#000;--fg:#f1f4f7;--muted:#9aa7b4;--line:#232a32;--card:#0e1318;--marine:#9cc2ee;--ok:#6fdaa5;--okbg:#0d2a1d;--warn:#f0a878;--warnbg:#2c1a0e}}
@@ -52,6 +54,18 @@ ol.tl li{display:grid;grid-template-columns:58px 1fr;gap:12px;padding:12px 0;bor
 .tag.warn{background:var(--warnbg);color:var(--warn);border-color:transparent}
 .done h3{text-decoration:line-through;opacity:.6}
 footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted)}
+#map{position:relative;height:min(68vh,560px);border-radius:22px;overflow:hidden;border:1px solid var(--line);margin:14px 0;background:var(--card)}
+#cap{position:absolute;left:10px;right:10px;bottom:38px;z-index:3;background:rgba(10,16,24,.82);color:#fff;border-radius:16px;padding:10px 14px;display:flex;gap:12px;align-items:center;backdrop-filter:blur(8px);transition:opacity .4s}
+#cap img{width:64px;height:64px;border-radius:12px;object-fit:cover;flex:none}
+#cap b{display:block;font-size:1.05rem;line-height:1.2}
+#cap span{font-size:.82rem;opacity:.85}
+#replay{position:absolute;top:10px;left:10px;z-index:3;font:inherit;font-size:.85rem;font-weight:600;border:0;border-radius:999px;padding:8px 14px;background:rgba(10,16,24,.82);color:#fff;cursor:pointer}
+.mk{width:58px;height:58px;border-radius:50%;border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.45);background:var(--marine) center/cover;display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;position:relative}
+.mk i{position:absolute;right:-6px;top:-6px;min-width:24px;height:24px;border-radius:12px;background:var(--accent);color:#fff;font:700 13px/24px system-ui;text-align:center;font-style:normal;border:2px solid #fff}
+.mk.home{width:22px;height:22px;background:var(--accent)}
+.me{width:18px;height:18px;border-radius:50%;background:#1a73e8;border:3px solid #fff;box-shadow:0 0 0 6px rgba(26,115,232,.25)}
+.photo{width:100%;max-height:220px;object-fit:cover;border-radius:14px;margin-top:8px;display:block}
+.credit{font-size:.72rem;color:var(--muted);margin:3px 0 0}
 [hidden]{display:none!important}
 </style>
 </head>
@@ -85,7 +99,8 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-si
     <p><b>Comment Trekr choisit.</b> Les lieux viennent de DATAtourisme, la base publique des offices de tourisme (extraction d'août 2025). « Hors des foules » écarte les lieux très connus : la notoriété est mesurée par le nombre de langues dans lesquelles le lieu a une page Wikipédia (source Wikidata, novembre 2026). C'est une mesure de notoriété, pas un comptage de visiteurs, et elle n'existe pour l'instant qu'à Paris.</p>
     <p><b>Ce que Trekr ne sait pas.</b> Les horaires d'ouverture, les travaux, la météo. Les temps de marche sont estimés (distance à vol d'oiseau majorée de 30 %, 4,5 km/h). Les musées sont exclus des parcours courts : ils demandent plus de temps.</p>
     <p><b>Écologie, sans slogan.</b> Tout le parcours se fait à pied : aucun trajet motorisé n'est proposé. Aller vers des lieux moins connus répartit les visites, c'est tout ce que Trekr affirme.</p>
-    <p>Sources : DATAtourisme (Licence Ouverte 2.0), Wikidata (CC0). Code et données ouverts.</p>
+    <p><b>Carte et photos.</b> La ville en 3D est dessinée à partir des bâtiments d'OpenStreetMap (© contributeurs OpenStreetMap, tuiles OpenFreeMap et OpenMapTiles) ; elle est chargée pour le quartier affiché, votre position exacte n'est pas transmise. Les photos viennent de Wikimedia Commons, chacune avec son auteur et sa licence. Le tracé relie les lieux en ligne droite : il ne suit pas encore les rues.</p>
+    <p>Sources : DATAtourisme (Licence Ouverte 2.0), Wikidata (CC0), OpenStreetMap (ODbL), Wikimedia Commons. Code et données ouverts.</p>
   </footer>
 </main>
 
@@ -102,7 +117,7 @@ const hhmm = (d) => d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-
 const SUR_PLACE = { "Parc et jardin": 8, "Monument": 4, "Édifice religieux": 6, "Site culturel": 5, "Patrimoine technique": 4, "Lieu de mémoire": 4, "Site archéologique": 5, "Château et fortification": 6, "Site naturel": 8 };
 const TRES_CONNU = 20; // au-delà de 20 langues sur Wikipédia : lieu très connu
 
-const state = { T: 40, mode: "calme", tiles: new Map(), known: null, plan: null, watch: null };
+const state = { T: 40, mode: "calme", tiles: new Map(), known: null, plan: null, watch: null, map: null, me: null };
 
 for (const t of [20, 40, 60, 90]) {
   const b = el("button", "chip big", t + " min");
@@ -223,6 +238,95 @@ function drawMap(plan) {
   return s;
 }
 
+/* ── Ville en 3D : vrais bâtiments, photos des monuments, survol du parcours ── */
+const EMOJI = { "Parc et jardin": "🌳", "Monument": "🏛️", "Édifice religieux": "⛪", "Site culturel": "🎭", "Patrimoine technique": "⚙️", "Lieu de mémoire": "🕯️", "Site archéologique": "🏺", "Château et fortification": "🏰", "Site naturel": "🌿" };
+function bearing(a, b, c, d) { const y = Math.sin((d - b) * RAD) * Math.cos(c * RAD), x = Math.cos(a * RAD) * Math.sin(c * RAD) - Math.sin(a * RAD) * Math.cos(c * RAD) * Math.cos((d - b) * RAD); return (Math.atan2(y, x) / RAD + 360) % 360; }
+function disc(la, lo, r) { const ring = []; for (let i = 0; i <= 24; i++) { const t = i / 24 * 2 * Math.PI; ring.push([lo + r * Math.cos(t) / (111320 * Math.cos(la * RAD)), la + r * Math.sin(t) / 110540]); } return ring; }
+const wait = (ms) => new Promise((r) => setTimeout(r, ms));
+
+function init3D(plan, container, at) {
+  if (!window.maplibregl) return false;
+  let map;
+  try {
+    map = new maplibregl.Map({ container, style: "https://tiles.openfreemap.org/styles/liberty", center: [plan.lon, plan.lat], zoom: 15.2, pitch: 55, bearing: -15, attributionControl: { compact: true } });
+  } catch { return false; }
+  state.map = map;
+  map.on("error", () => {});
+  const cap = el("div"); cap.id = "cap"; cap.style.opacity = 0;
+  const replay = el("button", null, "▶ Rejouer le survol"); replay.id = "replay"; replay.type = "button";
+  container.append(cap, replay);
+  const pts = [[plan.lon, plan.lat], ...plan.stops.map((s) => [s.p.lo, s.p.la]), [plan.lon, plan.lat]];
+  const still = matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  const caption = (i) => {
+    cap.replaceChildren();
+    const s = plan.stops[i], txt = el("div");
+    if (s.p.img) { const im = el("img"); im.src = s.p.img.u; im.alt = ""; cap.append(im); }
+    txt.append(el("span", null, `${at(s.arrive)} · étape ${i + 1} sur ${plan.stops.length}`), el("b", null, s.p.n), el("span", null, `${s.p.c} · ${s.stay} min sur place`));
+    cap.append(txt);
+    cap.style.opacity = 1;
+  };
+  const overview = () => {
+    const b = new maplibregl.LngLatBounds();
+    pts.forEach((p) => b.extend(p));
+    map.fitBounds(b, { padding: 70, pitch: 50, bearing: -15, duration: still ? 0 : 2500, maxZoom: 16.5 });
+  };
+  let run = 0;
+  async function fly() {
+    const me = ++run;
+    if (still) { overview(); return; }
+    map.getSource("route").setData({ type: "Feature", geometry: { type: "LineString", coordinates: [pts[0]] } });
+    for (let i = 0; i < plan.stops.length; i++) {
+      const from = pts[i], to = pts[i + 1];
+      // le tracé avance pendant que la caméra vole vers l'étape
+      const t0 = performance.now(), dur = 3200, done = pts.slice(0, i + 1);
+      map.flyTo({ center: to, zoom: 17.3, pitch: 66, bearing: bearing(from[1], from[0], to[1], to[0]), duration: dur, essential: true });
+      await new Promise((res) => { (function step(now) {
+        if (me !== run) return res();
+        const k = Math.min((now - t0) / dur, 1);
+        map.getSource("route").setData({ type: "Feature", geometry: { type: "LineString", coordinates: [...done, [from[0] + (to[0] - from[0]) * k, from[1] + (to[1] - from[1]) * k]] } });
+        k < 1 ? requestAnimationFrame(step) : res();
+      })(t0); });
+      if (me !== run) return;
+      caption(i);
+      map.rotateTo(map.getBearing() + 50, { duration: 2600, easing: (x) => x });
+      await wait(2700);
+      if (me !== run) return;
+    }
+    cap.style.opacity = 0;
+    map.getSource("route").setData({ type: "Feature", geometry: { type: "LineString", coordinates: pts } });
+    overview();
+  }
+
+  map.on("load", () => {
+    // Bâtiments réels en volume (données OpenStreetMap), si le style ne les a pas déjà.
+    if (!map.getStyle().layers.some((l) => l.type === "fill-extrusion")) {
+      const src = Object.keys(map.getStyle().sources).find((k) => map.getStyle().sources[k].type === "vector");
+      if (src) map.addLayer({ id: "trekr-3d", type: "fill-extrusion", source: src, "source-layer": "building", minzoom: 14,
+        paint: { "fill-extrusion-color": "#d8d2c6", "fill-extrusion-height": ["coalesce", ["get", "render_height"], 8], "fill-extrusion-base": ["coalesce", ["get", "render_min_height"], 0], "fill-extrusion-opacity": 0.85 } });
+    }
+    map.addSource("route", { type: "geojson", data: { type: "Feature", geometry: { type: "LineString", coordinates: pts } } });
+    map.addLayer({ id: "route-halo", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#fff", "line-width": 9, "line-opacity": 0.9 } });
+    map.addLayer({ id: "route", type: "line", source: "route", layout: { "line-cap": "round", "line-join": "round" }, paint: { "line-color": "#fd490f", "line-width": 5 } });
+    // Colonnes de lumière au-dessus de chaque étape, visibles de loin entre les immeubles.
+    map.addSource("beacons", { type: "geojson", data: { type: "FeatureCollection", features: plan.stops.map((s) => ({ type: "Feature", geometry: { type: "Polygon", coordinates: [disc(s.p.la, s.p.lo, 3.5)] } })) } });
+    map.addLayer({ id: "beacons", type: "fill-extrusion", source: "beacons", paint: { "fill-extrusion-color": "#fd490f", "fill-extrusion-height": 75, "fill-extrusion-opacity": 0.4 } });
+    const home = el("div", "mk home");
+    new maplibregl.Marker({ element: home }).setLngLat([plan.lon, plan.lat]).addTo(map);
+    plan.stops.forEach((s, i) => {
+      const m = el("div", "mk");
+      if (s.p.img) m.style.backgroundImage = `url("${s.p.img.u}")`; else m.textContent = EMOJI[s.p.c] || "📍";
+      m.append(el("i", null, i + 1));
+      m.title = s.p.n;
+      m.onclick = () => { run++; caption(i); map.flyTo({ center: [s.p.lo, s.p.la], zoom: 17.5, pitch: 66, duration: 1500 }); };
+      new maplibregl.Marker({ element: m, anchor: "bottom" }).setLngLat([s.p.lo, s.p.la]).addTo(map);
+    });
+    replay.onclick = fly;
+    fly();
+  });
+  return true;
+}
+
 function render(plan, label) {
   $("ask").hidden = true;
   const box = $("plan");
@@ -232,7 +336,9 @@ function render(plan, label) {
   const at = (min) => hhmm(new Date(start.getTime() + min * 60000));
   box.append(el("h1", null, `${Math.round(plan.total)} minutes, ${plan.stops.length} lieu${plan.stops.length > 1 ? "x" : ""}.`));
   box.append(el("p", "lead", `Depuis ${label}, ${plan.mode === "calme" ? "loin des lieux où tout le monde va" : "par les lieux les plus connus"}. Retour à ${at(plan.total)}.`));
-  box.append(drawMap(plan));
+  const mapBox = el("div"); mapBox.id = "map";
+  box.append(mapBox);
+  if (!init3D(plan, mapBox, at)) mapBox.replaceWith(drawMap(plan)); // repli : tracé simple sans 3D
   const sum = el("div", "sum");
   for (const [v, l] of [[Math.round(plan.total) + " min", `sur ${plan.T} disponibles`], [(plan.metres / 1000).toFixed(1).replace(".", ",") + " km", "à pied, estimés"], ["0", "trajet motorisé"]]) { const c = el("div"); c.append(el("b", null, v), el("span", "small", l)); sum.append(c); }
   box.append(sum);
@@ -251,6 +357,12 @@ function render(plan, label) {
     const n = nototag(s.p); if (n) tags.append(n);
     if (s.p.pmr === true) tags.append(el("span", "tag ok", "Accessible en fauteuil (déclaré)"));
     body.append(tags);
+    if (s.p.img) {
+      const im = el("img", "photo"); im.src = s.p.img.u; im.alt = s.p.n; im.loading = "lazy";
+      const cr = el("p", "credit"), ca = el("a", null, `Photo : ${s.p.img.a}, ${s.p.img.l}, Wikimedia Commons`);
+      ca.href = s.p.img.p; ca.target = "_blank"; ca.rel = "noopener noreferrer"; cr.append(ca);
+      body.append(im, cr);
+    }
     if (s.p.d) body.append(el("p", null, s.p.d));
     const links = el("p", "small");
     const a = el("a", null, "Voir sur la carte"); a.href = `https://www.openstreetmap.org/?mlat=${s.p.la}&mlon=${s.p.lo}#map=18/${s.p.la}/${s.p.lo}`; a.target = "_blank"; a.rel = "noopener noreferrer";
@@ -286,6 +398,10 @@ function follow(plan, start, btn) {
   if ("speechSynthesis" in window) speechSynthesis.speak(Object.assign(new SpeechSynthesisUtterance("C'est parti."), { lang: "fr-FR" }));
   if (navigator.wakeLock) navigator.wakeLock.request("screen").catch(() => {});
   state.watch = navigator.geolocation.watchPosition((g) => {
+    if (state.map && window.maplibregl) {
+      if (!state.me) state.me = new maplibregl.Marker({ element: el("div", "me") }).setLngLat([g.coords.longitude, g.coords.latitude]).addTo(state.map);
+      state.me.setLngLat([g.coords.longitude, g.coords.latitude]);
+    }
     const left = Math.round(plan.T - (Date.now() - start.getTime()) / 60000);
     const target = next < plan.stops.length ? plan.stops[next].p : { la: plan.lat, lo: plan.lon, n: "le point de départ" };
     const m = dist(g.coords.latitude, g.coords.longitude, target.la, target.lo);

@@ -36,6 +36,20 @@ le Python de python.org n'a pas les certificats : passer par curl.
 Le rapprochement par nom est volontairement large : mieux vaut ecarter a
 tort un lieu obscur qu'envoyer quelqu'un dans la foule.
 
+## Ville en 3D et photos (10 novembre 2026, "aller au-dela des points")
+
+- index.html, init3D() : MapLibre GL 4.7.1 (unpkg) + style OpenFreeMap
+  "liberty" (gratuit, sans cle) : batiments OpenStreetMap en volume, trace
+  qui avance, survol camera d'etape en etape (fly()), colonnes de lumiere,
+  marqueurs = photo du lieu. Repli automatique sur le trace SVG (drawMap)
+  si la 3D ne se charge pas. prefers-reduced-motion : pas de survol.
+- scripts/photos.py : image principale Wikidata (P18) + auteur et licence
+  via l'API Commons -> sources/photos.json (347 photos a Paris). Photo
+  seulement si le nom concorde strictement. Le credit est TOUJOURS affiche.
+- notoriete.py ecarte aussi les fiches mal localisees (meme nom exact connu
+  de Wikidata a plus de 500 m, ex. "Palais Garnier" place a Bastille).
+- Le trace est en lignes droites : pas encore d'itineraire pieton reel.
+
 ## Regles
 
 Aucune donnee inventee ; Trekr lit la fiche officielle. Notoriete n'est pas

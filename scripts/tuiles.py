@@ -14,11 +14,18 @@ def main():
     # Notoriete (scripts/notoriete.py) : nombre d'editions de Wikipedia, Paris seulement pour l'instant.
     chemin = os.path.join(ROOT, "sources", "notoriete.json")
     notoriete = json.load(open(chemin, encoding="utf-8")) if os.path.exists(chemin) else {}
+    chemin = os.path.join(ROOT, "sources", "photos.json")
+    photos = json.load(open(chemin, encoding="utf-8")) if os.path.exists(chemin) else {}
     tuiles = collections.defaultdict(list)
     for l in lieux:
+        if l["src"] in notoriete and len(notoriete[l["src"]]) > 3 and notoriete[l["src"]][3]:
+            continue  # localisation contredite par Wikidata : on ne guide personne vers une erreur
         item = {k: v for k, v in l.items() if k != "w" and v is not None}
         if l["src"] in notoriete:
             item["no"] = notoriete[l["src"]][0]
+            photo = photos.get(notoriete[l["src"]][2] or "")
+            if photo:  # vignette Wikimedia Commons, auteur, licence, page de la photo
+                item["img"] = {**photo, "u": photo["u"].split("?")[0]}
         tuiles[(math.floor(l["la"] * 10), math.floor(l["lo"] * 10))].append(item)
     out = os.path.join(ROOT, "site", "data", "t")
     shutil.rmtree(out, ignore_errors=True)
