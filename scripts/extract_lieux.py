@@ -118,6 +118,11 @@ def main():
             if len(desc) > 500:  # coupe en fin de phrase, jamais en plein mot
                 cut = desc[:500]
                 desc = cut[: cut.rfind(". ") + 1] or cut[: cut.rfind(" ")] + "…"
+            # Certaines fiches officielles sont tronquees en plein mot a la source :
+            # on s'arrete alors a la derniere phrase complete.
+            if desc[-1] not in ".!?…»\")" and ". " in desc:
+                desc = desc[: desc.rfind(". ") + 1]
+                stats["fiches tronquees a la source, ramenees a la phrase"] += 1
             item["d"] = desc
         # Texte long de la fiche, pour la lecture a voix haute (coupe en fin de phrase).
         if long and len(long) > len(desc or "") + 80:
