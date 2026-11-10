@@ -193,7 +193,7 @@ function renderResult() {
     else if (l.pmr === false) meta.append(el("span", "tag no", "Déclaré non accessible"));
     else meta.append(el("span", "tag", "Accessibilité non renseignée"));
     card.append(el("h3", null, l.n), meta);
-    if (l.d) card.append(el("p", null, l.d + (l.d.length >= 280 ? "…" : "")));
+    if (l.d) card.append(el("p", null, l.d));
     const src = el("p", "small");
     src.append(`${[l.cp, l.v].filter(Boolean).join(" ")} · fiche mise à jour le ${l.maj ? new Date(l.maj).toLocaleDateString("fr-FR") : "date inconnue"} · `);
     if (l.src) { const a = el("a", null, "fiche officielle DATAtourisme"); a.href = l.src; a.target = "_blank"; a.rel = "noopener noreferrer"; src.append(a); }

@@ -12,7 +12,7 @@ la page d'accueil ; la recherche par gare reste en page secondaire.
   vocale du navigateur, fr-FR). Demonstration : position simulee a Colmar.
 - site/gares.html : recherche par gare (lieux a moins de 1,5 km).
 - scripts/extract_lieux.py : fiches DATAtourisme (dossier ../../carbon/)
-  -> sources/lieux.json (52 230 lieux)
+  -> sources/lieux.json (près de 52 000 lieux)
 - scripts/tuiles.py : lieux -> site/data/t/<i>_<j>.json (cases de 0,1 degre)
 - scripts/croiser.py : lieux x gares x frequentation -> site/data/g/
 - Un fichier HTML par page, JS natif, aucune dependance, aucun traceur.

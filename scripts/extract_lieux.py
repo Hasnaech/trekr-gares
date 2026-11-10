@@ -5,7 +5,7 @@ coordonnees. Rien n'est invente : les champs absents restent absents.
 
 Usage : python3 scripts/extract_lieux.py [chemin/datatourisme_data]
 """
-import glob, json, os, sys, collections
+import glob, json, os, re, sys, collections, unicodedata
 
 SRC = sys.argv[1] if len(sys.argv) > 1 else os.path.join(
     os.path.dirname(__file__), "..", "..", "..", "carbon",
@@ -43,6 +43,29 @@ def fr(value):
     return value.strip() if isinstance(value, str) and value.strip() else None
 
 
+def dedoublonner(items, stats):
+    """Une meme adresse est parfois publiee par deux organismes : on garde
+    la fiche la plus recente quand le nom est identique a moins de 200 m."""
+    def cle(n):
+        t = unicodedata.normalize("NFD", n).encode("ascii", "ignore").decode().lower()
+        t = re.sub(r"[^a-z0-9]+", " ", t)
+        return " ".join(w for w in t.split() if w not in ("le", "la", "les", "l", "de", "du", "des", "d"))
+    groupes = collections.defaultdict(list)
+    for it in items:
+        groupes[cle(it["n"])].append(it)
+    garde = []
+    for g in groupes.values():
+        g.sort(key=lambda x: (x.get("maj") or "", len(x.get("dl", "")) + len(x.get("d", ""))), reverse=True)
+        retenus = []
+        for it in g:  # meme nom : doublon si a moins de ~200 m d'une fiche deja retenue
+            if any(abs(it["la"] - r["la"]) < 0.002 and abs(it["lo"] - r["lo"]) < 0.003 for r in retenus):
+                stats["doublons retires"] += 1
+            else:
+                retenus.append(it)
+        garde.extend(retenus)
+    return garde
+
+
 def main():
     files = [f for f in glob.glob(os.path.join(SRC, "objects", "**", "*.json"), recursive=True)]
     out, stats = [], collections.Counter()
@@ -69,12 +92,11 @@ def main():
             stats["sans categorie ou nom"] += 1
             continue
         addr = (loc.get("schema:address") or [{}])[0]
-        desc = None
+        desc = long = None
         for d in o.get("hasDescription") or []:
-            desc = fr(d.get("shortDescription")) or fr(d.get("dc:description"))
-            if desc:
-                break
-        desc = desc or fr(o.get("rdfs:comment"))
+            desc = desc or fr(d.get("shortDescription"))
+            long = long or fr(d.get("dc:description"))
+        desc = desc or fr(o.get("rdfs:comment")) or long
         web = None
         for c in o.get("hasContact") or []:
             pages = c.get("foaf:homepage") or []
@@ -92,11 +114,24 @@ def main():
         else:
             stats["pmr non renseigne"] += 1
         if desc:
-            item["d"] = desc[:280]
+            desc = " ".join(desc.split())
+            if len(desc) > 500:  # coupe en fin de phrase, jamais en plein mot
+                cut = desc[:500]
+                desc = cut[: cut.rfind(". ") + 1] or cut[: cut.rfind(" ")] + "…"
+            item["d"] = desc
+        # Texte long de la fiche, pour la lecture a voix haute (coupe en fin de phrase).
+        if long and len(long) > len(desc or "") + 80:
+            long = " ".join(long.split())
+            if len(long) > 1200:
+                cut = long[:1200]
+                long = cut[: cut.rfind(". ") + 1] or cut
+            item["dl"] = long
+            stats["avec texte long"] += 1
         if web and web.startswith("http"):
             item["w"] = web
         out.append(item)
         stats["gardes"] += 1
+    out = dedoublonner(out, stats)
     dest = os.path.join(os.path.dirname(__file__), "..", "sources", "lieux.json")
     json.dump(out, open(dest, "w", encoding="utf-8"), ensure_ascii=False, separators=(",", ":"))
     print(len(files), "fiches lues")
