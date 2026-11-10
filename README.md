@@ -1,4 +1,13 @@
-# Trekr : à pied depuis la gare
+# Trekr : le guide qui se déclenche sur votre passage
+
+Marchez, roulez, flânez : dès que vous approchez d'un lieu, Trekr vous le
+signale et vous lit sa fiche officielle, à voix haute si vous le voulez.
+52 230 lieux réels en France. Essayer : https://hasnaech.github.io/trekr-gares/
+
+La position reste dans le téléphone. Application web : le suivi fonctionne
+tant que la page est ouverte et l'écran allumé.
+
+## Aussi : à pied depuis la gare (`site/gares.html`)
 
 Pour chaque gare de voyageurs de France, les lieux réels à visiter à pied en
 sortant du train, avec l'accessibilité en fauteuil quand le lieu la déclare.
@@ -27,7 +36,8 @@ publiques que personne ne croise avec les gares. Ce site le fait :
 
 ```bash
 python3 scripts/extract_lieux.py   # fiches DATAtourisme -> sources/lieux.json
-python3 scripts/croiser.py         # lieux x gares -> site/data/
+python3 scripts/tuiles.py          # lieux -> tuiles géographiques du guide
+python3 scripts/croiser.py         # lieux x gares -> site/data/g/
 ```
 
 Le site (`site/`) est un seul fichier HTML sans dépendance ni traceur.

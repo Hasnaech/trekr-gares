@@ -3,204 +3,221 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Trekr : à pied depuis la gare</title>
-<meta name="description" content="Pour chaque gare de France, les lieux réels à visiter à pied en sortant du train, avec l'accessibilité en fauteuil quand elle est déclarée. Données publiques DATAtourisme et SNCF.">
+<meta name="theme-color" content="#1e3a5f">
+<title>Trekr : le guide qui se déclenche sur votre passage</title>
+<meta name="description" content="Marchez, roulez, flânez : Trekr vous raconte chaque lieu au moment où vous passez devant. 52 230 lieux réels en France, données publiques DATAtourisme. Sans compte, sans publicité.">
 <style>
-:root{--bg:#fff;--fg:#14202e;--muted:#5b6876;--line:#e3e7ec;--card:#f6f8fa;--accent:#fd490f;--marine:#1e3a5f;--ok:#12784a;--okbg:#e4f5ec;--no:#8a3b12;--nobg:#fbeee4}
-@media (prefers-color-scheme:dark){:root{--bg:#000;--fg:#f1f4f7;--muted:#9aa7b4;--line:#232a32;--card:#0e1318;--marine:#9cc2ee;--ok:#6fdaa5;--okbg:#0d2a1d;--no:#f0a878;--nobg:#2c1a0e}}
+:root{--bg:#fff;--fg:#14202e;--muted:#5b6876;--line:#e3e7ec;--card:#f6f8fa;--accent:#fd490f;--marine:#1e3a5f;--ok:#12784a;--okbg:#e4f5ec}
+@media (prefers-color-scheme:dark){:root{--bg:#000;--fg:#f1f4f7;--muted:#9aa7b4;--line:#232a32;--card:#0e1318;--marine:#9cc2ee;--ok:#6fdaa5;--okbg:#0d2a1d}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 -apple-system,"SF Pro Display","Segoe UI",system-ui,sans-serif}
-main{max-width:860px;margin:0 auto;padding:28px 16px 64px}
+main{max-width:640px;margin:0 auto;padding:24px 16px 72px}
 a{color:var(--accent)}
-h1{font-size:clamp(1.7rem,5vw,2.5rem);line-height:1.15;margin:.2em 0 .4em;letter-spacing:-.02em}
-h2{font-size:1.2rem;margin:2.2em 0 .6em}
-.brand{font-weight:700;font-size:1.1rem}.brand span{color:var(--accent)}
-.lead{color:var(--muted);max-width:60ch}
-.search{position:relative;margin:24px 0 8px}
-input[type=search]{width:100%;font:inherit;font-size:1.1rem;padding:16px 18px;border-radius:18px;border:2px solid var(--line);background:var(--bg);color:var(--fg)}
-input[type=search]:focus{outline:none;border-color:var(--accent)}
-#sugg{position:absolute;z-index:5;left:0;right:0;top:100%;margin:6px 0 0;padding:6px;list-style:none;background:var(--bg);border:1px solid var(--line);border-radius:16px;box-shadow:0 12px 30px rgba(0,0,0,.14);max-height:320px;overflow:auto}
-#sugg:empty{display:none}
-#sugg button{display:flex;justify-content:space-between;gap:12px;width:100%;text-align:left;font:inherit;color:inherit;background:none;border:0;padding:10px 12px;border-radius:10px;cursor:pointer}
-#sugg button:hover,#sugg button:focus{background:var(--card);outline:none}
+h1{font-size:clamp(1.7rem,6vw,2.4rem);line-height:1.15;margin:.2em 0 .4em;letter-spacing:-.02em}
+h2{font-size:1.1rem;margin:1.8em 0 .5em}
+.brand{font-weight:700;font-size:1.1rem;display:flex;justify-content:space-between;align-items:baseline}
+.brand span{color:var(--accent)}
+.lead{color:var(--muted)}
 .small{font-size:.85rem;color:var(--muted)}
-.filters{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:14px 0}
+.btn{font:inherit;font-weight:700;border:0;border-radius:18px;padding:16px 20px;cursor:pointer;width:100%}
+.btn.go{background:var(--accent);color:#fff;font-size:1.1rem}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--fg);font-weight:600;margin-top:10px}
+.btn.stop{background:var(--card);border:1px solid var(--line);color:var(--fg)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
 .chip{font:inherit;font-size:.88rem;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}
 .chip[aria-pressed=true]{background:var(--marine);border-color:var(--marine);color:var(--bg)}
-.place{border:1px solid var(--line);border-radius:20px;padding:16px 18px;margin:10px 0;background:var(--card)}
-.place h3{margin:0 0 2px;font-size:1.05rem}
-.meta{display:flex;flex-wrap:wrap;gap:6px 10px;align-items:center;font-size:.85rem;color:var(--muted);margin-bottom:6px}
-.walk{font-weight:700;color:var(--fg)}
-.tag{padding:2px 9px;border-radius:999px;font-size:.78rem;border:1px solid var(--line)}
+#status{border-radius:16px;background:var(--card);border:1px solid var(--line);padding:12px 14px;font-size:.92rem;margin:14px 0}
+.pulse{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--ok);margin-right:8px;animation:p 1.6s infinite}
+@keyframes p{0%{box-shadow:0 0 0 0 rgba(18,120,74,.5)}100%{box-shadow:0 0 0 12px rgba(18,120,74,0)}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}#now{animation:none!important}}
+#now{border:2px solid var(--accent);border-radius:22px;padding:18px;margin:14px 0;background:var(--bg);animation:in .5s ease}
+@keyframes in{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+#now h3{margin:.1em 0 .3em;font-size:1.3rem;line-height:1.2}
+.kicker{font-size:.8rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em}
+.tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.78rem;border:1px solid var(--line);margin-right:6px}
 .tag.ok{background:var(--okbg);color:var(--ok);border-color:transparent;font-weight:600}
-.tag.no{background:var(--nobg);color:var(--no);border-color:transparent}
-.place p{margin:6px 0 0;font-size:.93rem}
-.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:10px}
-.gare{display:block;width:100%;text-align:left;font:inherit;color:inherit;border:1px solid var(--line);border-radius:18px;padding:14px 16px;background:var(--card);cursor:pointer}
-.gare:hover{border-color:var(--accent)}
-.gare b{display:block}
-.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin:18px 0}
-.stat{border:1px solid var(--line);border-radius:18px;padding:14px}
-.stat b{display:block;font-size:1.5rem;font-variant-numeric:tabular-nums}
-.note{border-left:3px solid var(--accent);padding:10px 14px;background:var(--card);border-radius:0 12px 12px 0;font-size:.92rem;margin:14px 0}
-footer{margin-top:48px;padding-top:20px;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted)}
-.back{font:inherit;background:none;border:0;color:var(--accent);cursor:pointer;padding:0;margin-bottom:8px}
+.item{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.item b{display:block}
+.dist{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:700;text-align:right}
+.seen{opacity:.55}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted)}
+[hidden]{display:none!important}
 </style>
 </head>
 <body>
 <main>
-  <p class="brand">Trekr<span>.</span> <span class="small" style="color:var(--muted);font-weight:400">à pied depuis la gare</span></p>
+  <p class="brand"><b>Trekr<span>.</span></b> <a class="small" href="gares.html">Chercher par gare</a></p>
 
-  <section id="home">
-    <h1>Que peut-on voir à pied en descendant du train&nbsp;?</h1>
-    <p class="lead">Choisissez une gare. Trekr liste les lieux réels situés à moins de 1,5 km, du plus proche au plus lointain, et indique ceux qui se déclarent accessibles en fauteuil. Sans voiture, sans compte, sans publicité.</p>
+  <section id="intro">
+    <h1>Le guide qui se déclenche quand vous passez devant.</h1>
+    <p class="lead">Marchez, roulez, flânez. Dès que vous approchez d'un lieu, Trekr vous le signale et vous le raconte, à voix haute si vous le voulez. 52 230 lieux réels partout en France, tirés de la base publique des offices de tourisme.</p>
+    <button class="btn go" id="start" type="button">Démarrer la balade</button>
+    <button class="btn ghost" id="demo" type="button">Voir une démonstration (balade simulée à Colmar)</button>
+    <p class="small">Votre position précise reste dans votre téléphone : elle n'est envoyée nulle part. Aucun compte, aucune publicité.</p>
   </section>
 
-  <div class="search">
-    <label for="q" class="small">Gare de départ ou d'arrivée</label>
-    <input id="q" type="search" autocomplete="off" placeholder="Exemple : Najac, Colmar, Pontrieux" aria-controls="sugg">
-    <ul id="sugg" role="listbox"></ul>
-  </div>
-
-  <section id="result" hidden aria-live="polite"></section>
-
-  <section id="discover">
-    <div class="stats" id="stats"></div>
-    <h2>Gares oubliées, beaucoup à voir</h2>
-    <p class="small">Les gares les moins fréquentées de France (voyageurs comptés par la SNCF en 2024) qui ont au moins 15 lieux à moins de 1,5 km. Y descendre, c'est répartir les visites loin des sites saturés.</p>
-    <div class="grid" id="calmes"></div>
-    <h2>Gares avec le plus de lieux déclarés accessibles en fauteuil</h2>
-    <div class="grid" id="accessibles"></div>
+  <section id="walk" hidden>
+    <div id="status" aria-live="polite"></div>
+    <div class="row">
+      <button class="chip" id="voice" type="button" aria-pressed="true">Voix</button>
+      <span class="small">Déclencher à</span>
+      <button class="chip" data-r="80" type="button">80 m</button>
+      <button class="chip" data-r="150" type="button">150 m</button>
+      <button class="chip" data-r="300" type="button">300 m</button>
+    </div>
+    <div id="now" hidden aria-live="assertive"></div>
+    <h2>Autour de vous</h2>
+    <div id="near"><p class="small">Recherche des lieux proches…</p></div>
+    <h2 id="seenTitle" hidden>Déjà croisés pendant cette balade</h2>
+    <div id="seen"></div>
+    <p><button class="btn stop" id="stop" type="button">Arrêter la balade</button></p>
   </section>
 
   <footer>
-    <p><b>Ce que ces données valent.</b> Les lieux viennent de DATAtourisme, la base nationale alimentée par les offices de tourisme (extraction d'août 2025, date de mise à jour affichée sur chaque fiche). Les distances sont à vol d'oiseau et le temps de marche est une estimation (distance majorée de 30 %, 4 km/h) : le trajet réel peut être plus long. L'accessibilité est celle que le lieu déclare ; le chemin entre la gare et le lieu, et l'accessibilité de la gare elle-même, ne sont pas vérifiés ici. Vérifiez les horaires d'ouverture avant de partir.</p>
-    <p><b>Sources.</b> DATAtourisme (ADN Tourisme), Licence Ouverte 2.0. Gares de voyageurs et fréquentation en gares : SNCF Open Data, licence ODbL. Les données croisées de ce site sont réutilisables sous licence ODbL.</p>
-    <p>Trekr n'est pas un service de la SNCF. Assistance en gare pour les voyageurs handicapés : service Accès Plus de la SNCF.</p>
+    <p><b>Ce que ces données valent.</b> Les lieux et leurs textes viennent de DATAtourisme, la base nationale alimentée par les offices de tourisme (extraction d'août 2025). Trekr ne rédige rien : il lit la fiche officielle. La couverture est inégale selon les territoires, et un lieu peut avoir fermé ou changé depuis sa dernière mise à jour.</p>
+    <p><b>Limite technique.</b> Ceci est une application web : elle ne suit votre position que tant que cette page reste ouverte et l'écran allumé. Restez attentif à la circulation.</p>
+    <p><b>Sources.</b> DATAtourisme (ADN Tourisme), Licence Ouverte 2.0. Code et données ouverts.</p>
   </footer>
 </main>
 
 <script>
 const $ = (id) => document.getElementById(id);
-const norm = (s) => s.normalize("NFD").replace(/[̀-ͯ]/g, "").toLowerCase().replace(/[^a-z0-9]+/g, " ").trim();
-const fmt = (n) => n.toLocaleString("fr-FR");
 const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const RAD = Math.PI / 180;
+function dist(a, b, c, d) { const h = Math.sin((c - a) * RAD / 2) ** 2 + Math.cos(a * RAD) * Math.cos(c * RAD) * Math.sin((d - b) * RAD / 2) ** 2; return 2 * 6371000 * Math.asin(Math.sqrt(h)); }
+function cap(a, b, c, d) { // direction du lieu vu depuis la position
+  const y = Math.sin((d - b) * RAD) * Math.cos(c * RAD), x = Math.cos(a * RAD) * Math.sin(c * RAD) - Math.sin(a * RAD) * Math.cos(c * RAD) * Math.cos((d - b) * RAD);
+  return ["au nord", "au nord-est", "à l'est", "au sud-est", "au sud", "au sud-ouest", "à l'ouest", "au nord-ouest"][Math.round(((Math.atan2(y, x) / RAD + 360) % 360) / 45) % 8];
+}
+const metres = (m) => (m >= 1000 ? (m / 1000).toFixed(1).replace(".", ",") + " km" : Math.round(m / 10) * 10 + " m");
 
-let GARES = [];
-const state = { id: null, data: null, cat: null, pmr: false, max: 1500 };
+const state = { radius: 150, voice: true, pos: null, places: [], tiles: new Map(), known: null, seen: new Set(), lastTrigger: 0, watch: null, demo: null, lock: null };
+const MUETS = new Set(["Office de tourisme", "Bibliothèque"]); // affichés dans la liste, mais ne déclenchent pas le guide
 
-fetch("data/gares.json").then((r) => r.json()).then((meta) => {
-  GARES = meta.gares.map((g) => ({ ...g, k: norm(g.n) }));
-  renderHome(meta);
-  route();
-}).catch(() => { $("stats").textContent = "Les données n'ont pas pu être chargées."; });
-
-function gareButton(g, detail) {
-  const b = el("button", "gare");
-  b.type = "button";
-  b.append(el("b", null, g.n), el("span", "small", detail));
-  b.onclick = () => { location.hash = "gare=" + g.id; };
-  return b;
+/* Tuiles : on ne charge que les lieux des 9 cases autour de soi. */
+async function loadAround(lat, lon) {
+  if (!state.known) state.known = new Set(await fetch("data/tuiles.json").then((r) => r.json()));
+  const ci = Math.floor(lat * 10), cj = Math.floor(lon * 10), wanted = [];
+  for (let i = ci - 1; i <= ci + 1; i++) for (let j = cj - 1; j <= cj + 1; j++) wanted.push(`${i}_${j}`);
+  await Promise.all(wanted.filter((k) => state.known.has(k) && !state.tiles.has(k)).map((k) =>
+    fetch(`data/t/${k}.json`).then((r) => r.json()).then((d) => state.tiles.set(k, d)).catch(() => {})));
+  state.places = wanted.flatMap((k) => state.tiles.get(k) || []);
 }
 
-function renderHome(meta) {
-  const avec = GARES.filter((g) => g.nb > 0).length;
-  const pmr = GARES.filter((g) => g.pmr > 0).length;
-  for (const [n, label] of [[GARES.length, "gares de voyageurs"], [meta.total_lieux, "lieux réels localisés"], [avec, "gares avec au moins un lieu à pied"], [pmr, "gares avec un lieu déclaré accessible en fauteuil"]]) {
-    const s = el("div", "stat");
-    s.append(el("b", null, fmt(n)), el("span", "small", label));
-    $("stats").append(s);
+function speak(text) {
+  if (!state.voice || !("speechSynthesis" in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "fr-FR";
+  speechSynthesis.speak(u);
+}
+
+async function onPosition(lat, lon, accuracy) {
+  state.pos = { lat, lon, accuracy };
+  await loadAround(lat, lon);
+  const ranked = state.places.map((p) => ({ p, m: dist(lat, lon, p.la, p.lo) })).sort((a, b) => a.m - b.m);
+  const precise = accuracy <= 100;
+  $("status").replaceChildren(el("span", "pulse"), precise
+    ? `Balade en cours. Position précise à ${Math.round(accuracy)} m. ${state.places.length} lieux connus dans ce secteur.`
+    : `Signal GPS trop imprécis (${Math.round(accuracy)} m) pour déclencher le guide. Éloignez-vous des bâtiments.`);
+
+  // Déclenchement : le lieu non encore croisé le plus proche, dans le rayon choisi.
+  const talking = "speechSynthesis" in window && speechSynthesis.speaking;
+  if (precise && !talking && Date.now() - state.lastTrigger > 6000) {
+    const hit = ranked.find((r) => r.m <= state.radius && !state.seen.has(r.p.src) && !MUETS.has(r.p.c));
+    if (hit) trigger(hit.p, hit.m);
   }
-  GARES.filter((g) => g.voy && g.nb >= 15).sort((a, b) => a.voy - b.voy).slice(0, 12)
-    .forEach((g) => $("calmes").append(gareButton(g, `${fmt(g.voy)} voyageurs en 2024 · ${g.nb} lieux à pied`)));
-  GARES.filter((g) => g.pmr > 0).sort((a, b) => b.pmr - a.pmr).slice(0, 9)
-    .forEach((g) => $("accessibles").append(gareButton(g, `${g.pmr} lieux déclarés accessibles sur ${g.nb}`)));
+  renderNear(ranked.slice(0, 12));
 }
 
-/* Recherche de gare, insensible aux accents. */
-$("q").addEventListener("input", () => {
-  const q = norm($("q").value);
-  const box = $("sugg");
+function trigger(p, m) {
+  state.seen.add(p.src);
+  state.lastTrigger = Date.now();
+  const box = $("now");
+  box.hidden = false;
+  box.replaceChildren(el("div", "kicker", `Vous passez devant · ${metres(m)} ${cap(state.pos.lat, state.pos.lon, p.la, p.lo)}`), el("h3", null, p.n));
+  const tags = el("p");
+  tags.append(el("span", "tag", p.c));
+  if (p.pmr === true) tags.append(el("span", "tag ok", "Accessible en fauteuil (déclaré)"));
+  box.append(tags);
+  if (p.d) box.append(el("p", null, p.d + (p.d.length >= 280 ? "…" : "")));
+  const src = el("p", "small");
+  src.append(`Fiche mise à jour le ${p.maj ? new Date(p.maj).toLocaleDateString("fr-FR") : "date inconnue"} · `);
+  const a = el("a", null, "fiche officielle");
+  a.href = p.src; a.target = "_blank"; a.rel = "noopener noreferrer";
+  src.append(a);
+  box.append(src);
+  if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
+  speak(`${p.n}. ${p.c}. ${p.d || ""}`);
+  box.scrollIntoView({ behavior: "smooth", block: "center" });
+  const row = el("div", "item seen");
+  row.append(el("b", null, p.n), el("span", "small", p.c));
+  $("seen").prepend(row);
+  $("seenTitle").hidden = false;
+}
+
+function renderNear(list) {
+  const box = $("near");
   box.replaceChildren();
-  if (q.length < 2) return;
-  const hits = GARES.filter((g) => g.k.includes(q)).sort((a, b) => (a.k.startsWith(q) ? 0 : 1) - (b.k.startsWith(q) ? 0 : 1) || b.nb - a.nb).slice(0, 12);
-  if (!hits.length) { box.append(el("li", "small", "Aucune gare de voyageurs ne correspond.")); return; }
-  for (const g of hits) {
-    const li = el("li"), b = el("button");
-    b.type = "button";
-    b.append(el("span", null, g.n), el("span", "small", g.nb ? `${g.nb} lieux` : "aucun lieu connu"));
-    b.onclick = () => { location.hash = "gare=" + g.id; };
-    li.append(b);
-    box.append(li);
-  }
-});
-
-window.addEventListener("hashchange", route);
-function route() {
-  const id = new URLSearchParams(location.hash.slice(1)).get("gare");
-  $("sugg").replaceChildren();
-  if (!id || !GARES.some((g) => g.id === id)) { show(false); return; }
-  Object.assign(state, { id, data: null, cat: null, pmr: false, max: 1500 });
-  fetch(`data/g/${id}.json`).then((r) => r.json()).then((d) => { state.data = d; $("q").value = ""; show(true); renderResult(); window.scrollTo(0, 0); });
-}
-function show(result) {
-  $("result").hidden = !result;
-  $("home").hidden = $("discover").hidden = result;
-  document.title = result && state.data ? `${state.data.gare} : à pied depuis la gare | Trekr` : "Trekr : à pied depuis la gare";
-}
-
-function chip(label, pressed, onclick) {
-  const b = el("button", "chip", label);
-  b.type = "button";
-  b.setAttribute("aria-pressed", pressed);
-  b.onclick = onclick;
-  return b;
-}
-
-function renderResult() {
-  const box = $("result"), g = GARES.find((x) => x.id === state.id), all = state.data.lieux;
-  document.title = `${state.data.gare} : à pied depuis la gare | Trekr`;
-  box.replaceChildren();
-  const back = el("button", "back", "← Toutes les gares");
-  back.type = "button";
-  back.onclick = () => { location.hash = ""; };
-  box.append(back, el("h1", null, `${state.data.gare} : à pied depuis la gare`));
-
-  if (!all.length) {
-    box.append(el("p", "note", "Aucun lieu n'est recensé à moins de 1,5 km de cette gare dans les données dont nous disposons. Cela ne veut pas dire qu'il n'y a rien à voir : la base ne couvre pas tout le territoire de la même façon."));
-    return;
-  }
-  const nbPmr = all.filter((l) => l.pmr === true).length;
-  const sans = all.filter((l) => l.pmr === undefined).length;
-  box.append(el("p", "lead", `${all.length} lieux à moins de 1,5 km, dont ${nbPmr} déclarés accessibles en fauteuil. ${sans} ne donnent aucune information d'accessibilité.` + (g.voy ? ` Cette gare a accueilli ${fmt(g.voy)} voyageurs en 2024.` : "")));
-
-  const f1 = el("div", "filters");
-  for (const [m, label] of [[500, "10 min à pied"], [1000, "20 min"], [1500, "Tout (1,5 km)"]]) f1.append(chip(label, state.max === m, () => { state.max = m; renderResult(); }));
-  f1.append(chip("Accessible en fauteuil (déclaré)", state.pmr, () => { state.pmr = !state.pmr; renderResult(); }));
-  const f2 = el("div", "filters");
-  const cats = [...new Set(all.map((l) => l.c))].sort();
-  f2.append(chip("Toutes catégories", state.cat === null, () => { state.cat = null; renderResult(); }));
-  for (const c of cats) f2.append(chip(c, state.cat === c, () => { state.cat = c; renderResult(); }));
-  box.append(f1, f2);
-
-  const list = all.filter((l) => l.m <= state.max && (!state.pmr || l.pmr === true) && (!state.cat || l.c === state.cat));
-  box.append(el("p", "small", `${list.length} lieux affichés, du plus proche au plus lointain.`));
-  if (state.pmr) box.append(el("p", "note", "L'accessibilité est celle que le lieu déclare aux offices de tourisme. Le trajet depuis la gare (trottoirs, pentes, traversées) n'est pas vérifié."));
-  for (const l of list) {
-    const card = el("article", "place"), meta = el("div", "meta");
-    meta.append(el("span", "walk", `${l.min} min à pied`), el("span", null, `${l.m >= 1000 ? (l.m / 1000).toFixed(1).replace(".", ",") + " km" : l.m + " m"} à vol d'oiseau`), el("span", "tag", l.c));
-    if (l.pmr === true) meta.append(el("span", "tag ok", "Accessible en fauteuil (déclaré)"));
-    else if (l.pmr === false) meta.append(el("span", "tag no", "Déclaré non accessible"));
-    else meta.append(el("span", "tag", "Accessibilité non renseignée"));
-    card.append(el("h3", null, l.n), meta);
-    if (l.d) card.append(el("p", null, l.d + (l.d.length >= 280 ? "…" : "")));
-    const src = el("p", "small");
-    src.append(`${[l.cp, l.v].filter(Boolean).join(" ")} · fiche mise à jour le ${l.maj ? new Date(l.maj).toLocaleDateString("fr-FR") : "date inconnue"} · `);
-    if (l.src) { const a = el("a", null, "fiche officielle DATAtourisme"); a.href = l.src; a.target = "_blank"; a.rel = "noopener noreferrer"; src.append(a); }
-    card.append(src);
-    box.append(card);
+  if (!list.length) { box.append(el("p", "small", "Aucun lieu connu dans ce secteur. La base ne couvre pas tout le territoire de la même façon.")); return; }
+  for (const { p, m } of list) {
+    const row = el("div", "item" + (state.seen.has(p.src) ? " seen" : "")), left = el("div"), right = el("div", "dist", metres(m));
+    left.append(el("b", null, p.n), el("span", "small", `${p.c}${p.v ? " · " + p.v : ""}`));
+    right.append(el("div", "small", cap(state.pos.lat, state.pos.lon, p.la, p.lo)));
+    row.append(left, right);
+    box.append(row);
   }
 }
+
+function setRadius(r) {
+  state.radius = r;
+  document.querySelectorAll("[data-r]").forEach((b) => b.setAttribute("aria-pressed", Number(b.dataset.r) === r));
+}
+document.querySelectorAll("[data-r]").forEach((b) => { b.onclick = () => setRadius(Number(b.dataset.r)); });
+$("voice").onclick = () => { state.voice = !state.voice; $("voice").setAttribute("aria-pressed", state.voice); if (!state.voice && "speechSynthesis" in window) speechSynthesis.cancel(); };
+
+function begin(message) {
+  $("intro").hidden = true;
+  $("walk").hidden = false;
+  setRadius(state.radius);
+  $("status").textContent = message;
+  speak("Balade démarrée."); // prononcé pendant le clic : autorise la voix sur iPhone
+  if (navigator.wakeLock) navigator.wakeLock.request("screen").then((l) => { state.lock = l; }).catch(() => {});
+}
+
+$("start").onclick = () => {
+  if (!navigator.geolocation) { alert("Ce navigateur ne donne pas accès à la position."); return; }
+  begin("Recherche de votre position…");
+  state.watch = navigator.geolocation.watchPosition(
+    (g) => onPosition(g.coords.latitude, g.coords.longitude, g.coords.accuracy),
+    (e) => { $("status").textContent = e.code === 1 ? "Vous avez refusé l'accès à la position. Autorisez-le dans les réglages du navigateur pour utiliser le guide." : "Position introuvable pour l'instant. Vérifiez que la localisation est activée."; },
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
+};
+
+/* Démonstration : position simulée le long d'un trajet réel à Colmar (gare vers le centre). */
+const TRAJET = [[48.0727, 7.3467], [48.0735, 7.3549], [48.0770, 7.3580], [48.0796, 7.3555]];
+$("demo").onclick = () => {
+  begin("Démonstration : position simulée à Colmar.");
+  let step = 0;
+  const perLeg = 20, total = (TRAJET.length - 1) * perLeg;
+  const tick = () => {
+    const leg = Math.min(Math.floor(step / perLeg), TRAJET.length - 2), t = (step - leg * perLeg) / perLeg;
+    const [a, b] = TRAJET[leg], [c, d] = TRAJET[leg + 1];
+    onPosition(a + (c - a) * t, b + (d - b) * t, 10).then(() => {
+      $("status").replaceChildren(el("span", "pulse"), `Démonstration : position simulée à Colmar, de la gare vers le centre (${Math.round(step / total * 100)} %).`);
+    });
+    if (step++ >= total) clearInterval(state.demo);
+  };
+  tick();
+  state.demo = setInterval(tick, 2000);
+};
+
+$("stop").onclick = () => {
+  if (state.watch !== null) navigator.geolocation.clearWatch(state.watch);
+  clearInterval(state.demo);
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+  if (state.lock) state.lock.release().catch(() => {});
+  location.reload();
+};
 </script>
 </body>
 </html>
