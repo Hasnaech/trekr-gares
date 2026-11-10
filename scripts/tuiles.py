@@ -11,9 +11,14 @@ ROOT = os.path.join(os.path.dirname(__file__), "..")
 
 def main():
     lieux = json.load(open(os.path.join(ROOT, "sources", "lieux.json"), encoding="utf-8"))
+    # Notoriete (scripts/notoriete.py) : nombre d'editions de Wikipedia, Paris seulement pour l'instant.
+    chemin = os.path.join(ROOT, "sources", "notoriete.json")
+    notoriete = json.load(open(chemin, encoding="utf-8")) if os.path.exists(chemin) else {}
     tuiles = collections.defaultdict(list)
     for l in lieux:
         item = {k: v for k, v in l.items() if k != "w" and v is not None}
+        if l["src"] in notoriete:
+            item["no"] = notoriete[l["src"]][0]
         tuiles[(math.floor(l["la"] * 10), math.floor(l["lo"] * 10))].append(item)
     out = os.path.join(ROOT, "site", "data", "t")
     shutil.rmtree(out, ignore_errors=True)

@@ -1,0 +1,224 @@
+<!doctype html>
+<html lang="fr">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#1e3a5f">
+<title>Trekr : le guide qui se déclenche sur votre passage</title>
+<meta name="description" content="Marchez, roulez, flânez : Trekr vous raconte chaque lieu au moment où vous passez devant. Près de 52 000 lieux réels en France, données publiques DATAtourisme. Sans compte, sans publicité.">
+<style>
+:root{--bg:#fff;--fg:#14202e;--muted:#5b6876;--line:#e3e7ec;--card:#f6f8fa;--accent:#fd490f;--marine:#1e3a5f;--ok:#12784a;--okbg:#e4f5ec}
+@media (prefers-color-scheme:dark){:root{--bg:#000;--fg:#f1f4f7;--muted:#9aa7b4;--line:#232a32;--card:#0e1318;--marine:#9cc2ee;--ok:#6fdaa5;--okbg:#0d2a1d}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.55 -apple-system,"SF Pro Display","Segoe UI",system-ui,sans-serif}
+main{max-width:640px;margin:0 auto;padding:24px 16px 72px}
+a{color:var(--accent)}
+h1{font-size:clamp(1.7rem,6vw,2.4rem);line-height:1.15;margin:.2em 0 .4em;letter-spacing:-.02em}
+h2{font-size:1.1rem;margin:1.8em 0 .5em}
+.brand{font-weight:700;font-size:1.1rem;display:flex;justify-content:space-between;align-items:baseline}
+.brand span{color:var(--accent)}
+.lead{color:var(--muted)}
+.small{font-size:.85rem;color:var(--muted)}
+.btn{font:inherit;font-weight:700;border:0;border-radius:18px;padding:16px 20px;cursor:pointer;width:100%}
+.btn.go{background:var(--accent);color:#fff;font-size:1.1rem}
+.btn.ghost{background:none;border:1px solid var(--line);color:var(--fg);font-weight:600;margin-top:10px}
+.btn.stop{background:var(--card);border:1px solid var(--line);color:var(--fg)}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:12px 0}
+.chip{font:inherit;font-size:.88rem;padding:7px 13px;border-radius:999px;border:1px solid var(--line);background:var(--bg);color:var(--fg);cursor:pointer}
+.chip[aria-pressed=true]{background:var(--marine);border-color:var(--marine);color:var(--bg)}
+#status{border-radius:16px;background:var(--card);border:1px solid var(--line);padding:12px 14px;font-size:.92rem;margin:14px 0}
+.pulse{display:inline-block;width:10px;height:10px;border-radius:50%;background:var(--ok);margin-right:8px;animation:p 1.6s infinite}
+@keyframes p{0%{box-shadow:0 0 0 0 rgba(18,120,74,.5)}100%{box-shadow:0 0 0 12px rgba(18,120,74,0)}}
+@media (prefers-reduced-motion:reduce){.pulse{animation:none}#now{animation:none!important}}
+#now{border:2px solid var(--accent);border-radius:22px;padding:18px;margin:14px 0;background:var(--bg);animation:in .5s ease}
+@keyframes in{from{transform:translateY(12px);opacity:0}to{transform:none;opacity:1}}
+#now h3{margin:.1em 0 .3em;font-size:1.3rem;line-height:1.2}
+.kicker{font-size:.8rem;font-weight:700;color:var(--accent);text-transform:uppercase;letter-spacing:.05em}
+.tag{display:inline-block;padding:2px 9px;border-radius:999px;font-size:.78rem;border:1px solid var(--line);margin-right:6px}
+.tag.ok{background:var(--okbg);color:var(--ok);border-color:transparent;font-weight:600}
+.item{display:flex;justify-content:space-between;gap:12px;padding:11px 0;border-bottom:1px solid var(--line)}
+.item b{display:block}
+.dist{white-space:nowrap;font-variant-numeric:tabular-nums;font-weight:700;text-align:right}
+.seen{opacity:.55}
+footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted)}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<main>
+  <p class="brand"><b>Trekr<span>.</span></b> <span class="small"><a href="./">J'ai 40 minutes</a> · <a href="gares.html">Par gare</a></span></p>
+
+  <section id="intro">
+    <h1>Le guide qui se déclenche quand vous passez devant.</h1>
+    <p class="lead">Marchez, roulez, flânez. Dès que vous approchez d'un lieu, Trekr vous le signale et vous le raconte, à voix haute si vous le voulez. Près de 52 000 lieux réels partout en France, dont plus de 700 à Paris, tirés de la base publique des offices de tourisme.</p>
+    <button class="btn go" id="start" type="button">Démarrer la balade</button>
+    <button class="btn ghost" id="demo" type="button">Voir une démonstration : Paris, du Pont-Neuf au Panthéon</button>
+    <p class="small">Votre position précise reste dans votre téléphone : elle n'est envoyée nulle part. Aucun compte, aucune publicité.</p>
+  </section>
+
+  <section id="walk" hidden>
+    <div id="status" aria-live="polite"></div>
+    <div class="row">
+      <button class="chip" id="voice" type="button" aria-pressed="true">Voix</button>
+      <span class="small">Déclencher à</span>
+      <button class="chip" data-r="80" type="button">80 m</button>
+      <button class="chip" data-r="150" type="button">150 m</button>
+      <button class="chip" data-r="300" type="button">300 m</button>
+    </div>
+    <div id="now" hidden aria-live="assertive"></div>
+    <h2>Autour de vous</h2>
+    <div id="near"><p class="small">Recherche des lieux proches…</p></div>
+    <h2 id="seenTitle" hidden>Déjà croisés pendant cette balade</h2>
+    <div id="seen"></div>
+    <p><button class="btn stop" id="stop" type="button">Arrêter la balade</button></p>
+  </section>
+
+  <footer>
+    <p><b>Ce que ces données valent.</b> Les lieux et leurs textes viennent de DATAtourisme, la base nationale alimentée par les offices de tourisme (extraction d'août 2025). Trekr ne rédige rien : il lit la fiche officielle. La couverture est inégale selon les territoires, et un lieu peut avoir fermé ou changé depuis sa dernière mise à jour.</p>
+    <p><b>Limite technique.</b> Ceci est une application web : elle ne suit votre position que tant que cette page reste ouverte et l'écran allumé. Restez attentif à la circulation.</p>
+    <p><b>Sources.</b> DATAtourisme (ADN Tourisme), Licence Ouverte 2.0. Code et données ouverts.</p>
+  </footer>
+</main>
+
+<script>
+const $ = (id) => document.getElementById(id);
+const el = (tag, cls, text) => { const e = document.createElement(tag); if (cls) e.className = cls; if (text != null) e.textContent = text; return e; };
+const RAD = Math.PI / 180;
+function dist(a, b, c, d) { const h = Math.sin((c - a) * RAD / 2) ** 2 + Math.cos(a * RAD) * Math.cos(c * RAD) * Math.sin((d - b) * RAD / 2) ** 2; return 2 * 6371000 * Math.asin(Math.sqrt(h)); }
+function cap(a, b, c, d) { // direction du lieu vu depuis la position
+  const y = Math.sin((d - b) * RAD) * Math.cos(c * RAD), x = Math.cos(a * RAD) * Math.sin(c * RAD) - Math.sin(a * RAD) * Math.cos(c * RAD) * Math.cos((d - b) * RAD);
+  return ["au nord", "au nord-est", "à l'est", "au sud-est", "au sud", "au sud-ouest", "à l'ouest", "au nord-ouest"][Math.round(((Math.atan2(y, x) / RAD + 360) % 360) / 45) % 8];
+}
+const metres = (m) => (m >= 1000 ? (m / 1000).toFixed(1).replace(".", ",") + " km" : Math.round(m / 10) * 10 + " m");
+
+const state = { radius: 150, voice: true, pos: null, places: [], tiles: new Map(), known: null, seen: new Set(), lastTrigger: 0, watch: null, demo: null, lock: null };
+const MUETS = new Set(["Office de tourisme", "Bibliothèque"]); // affichés dans la liste, mais ne déclenchent pas le guide
+
+/* Tuiles : on ne charge que les lieux des 9 cases autour de soi. */
+async function loadAround(lat, lon) {
+  if (!state.known) state.known = new Set(await fetch("data/tuiles.json").then((r) => r.json()));
+  const ci = Math.floor(lat * 10), cj = Math.floor(lon * 10), wanted = [];
+  for (let i = ci - 1; i <= ci + 1; i++) for (let j = cj - 1; j <= cj + 1; j++) wanted.push(`${i}_${j}`);
+  await Promise.all(wanted.filter((k) => state.known.has(k) && !state.tiles.has(k)).map((k) =>
+    fetch(`data/t/${k}.json`).then((r) => r.json()).then((d) => state.tiles.set(k, d)).catch(() => {})));
+  state.places = wanted.flatMap((k) => state.tiles.get(k) || []);
+}
+
+function speak(text) {
+  if (!state.voice || !("speechSynthesis" in window)) return;
+  const u = new SpeechSynthesisUtterance(text);
+  u.lang = "fr-FR";
+  speechSynthesis.speak(u);
+}
+
+async function onPosition(lat, lon, accuracy) {
+  state.pos = { lat, lon, accuracy };
+  await loadAround(lat, lon);
+  const ranked = state.places.map((p) => ({ p, m: dist(lat, lon, p.la, p.lo) })).sort((a, b) => a.m - b.m);
+  const precise = accuracy <= 100;
+  $("status").replaceChildren(el("span", "pulse"), precise
+    ? `Balade en cours. Position précise à ${Math.round(accuracy)} m. ${state.places.length} lieux connus dans ce secteur.`
+    : `Signal GPS trop imprécis (${Math.round(accuracy)} m) pour déclencher le guide. Éloignez-vous des bâtiments.`);
+
+  // Déclenchement : le lieu non encore croisé le plus proche, dans le rayon choisi.
+  const talking = "speechSynthesis" in window && speechSynthesis.speaking;
+  if (precise && !talking && Date.now() - state.lastTrigger > 6000) {
+    const hit = ranked.find((r) => r.m <= state.radius && !state.seen.has(r.p.src) && !MUETS.has(r.p.c));
+    if (hit) trigger(hit.p, hit.m);
+  }
+  renderNear(ranked.slice(0, 12));
+}
+
+function trigger(p, m) {
+  state.seen.add(p.src);
+  state.lastTrigger = Date.now();
+  const box = $("now");
+  box.hidden = false;
+  box.replaceChildren(el("div", "kicker", `Vous passez devant · ${metres(m)} ${cap(state.pos.lat, state.pos.lon, p.la, p.lo)}`), el("h3", null, p.n));
+  const tags = el("p");
+  tags.append(el("span", "tag", p.c));
+  if (p.pmr === true) tags.append(el("span", "tag ok", "Accessible en fauteuil (déclaré)"));
+  box.append(tags);
+  const texte = p.dl || p.d;
+  if (texte) box.append(el("p", null, texte));
+  const src = el("p", "small");
+  src.append(`Fiche mise à jour le ${p.maj ? new Date(p.maj).toLocaleDateString("fr-FR") : "date inconnue"} · `);
+  const a = el("a", null, "fiche officielle");
+  a.href = p.src; a.target = "_blank"; a.rel = "noopener noreferrer";
+  src.append(a);
+  box.append(src);
+  if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
+  speak(`${p.n}. ${p.c}. ${texte || ""}`);
+  box.scrollIntoView({ behavior: "smooth", block: "center" });
+  const row = el("div", "item seen");
+  row.append(el("b", null, p.n), el("span", "small", p.c));
+  $("seen").prepend(row);
+  $("seenTitle").hidden = false;
+}
+
+function renderNear(list) {
+  const box = $("near");
+  box.replaceChildren();
+  if (!list.length) { box.append(el("p", "small", "Aucun lieu connu dans ce secteur. La base ne couvre pas tout le territoire de la même façon.")); return; }
+  for (const { p, m } of list) {
+    const row = el("div", "item" + (state.seen.has(p.src) ? " seen" : "")), left = el("div"), right = el("div", "dist", metres(m));
+    left.append(el("b", null, p.n), el("span", "small", `${p.c}${p.v ? " · " + p.v : ""}`));
+    right.append(el("div", "small", cap(state.pos.lat, state.pos.lon, p.la, p.lo)));
+    row.append(left, right);
+    box.append(row);
+  }
+}
+
+function setRadius(r) {
+  state.radius = r;
+  document.querySelectorAll("[data-r]").forEach((b) => b.setAttribute("aria-pressed", Number(b.dataset.r) === r));
+}
+document.querySelectorAll("[data-r]").forEach((b) => { b.onclick = () => setRadius(Number(b.dataset.r)); });
+$("voice").onclick = () => { state.voice = !state.voice; $("voice").setAttribute("aria-pressed", state.voice); if (!state.voice && "speechSynthesis" in window) speechSynthesis.cancel(); };
+
+function begin(message) {
+  $("intro").hidden = true;
+  $("walk").hidden = false;
+  setRadius(state.radius);
+  $("status").textContent = message;
+  speak("Balade démarrée."); // prononcé pendant le clic : autorise la voix sur iPhone
+  if (navigator.wakeLock) navigator.wakeLock.request("screen").then((l) => { state.lock = l; }).catch(() => {});
+}
+
+$("start").onclick = () => {
+  if (!navigator.geolocation) { alert("Ce navigateur ne donne pas accès à la position."); return; }
+  begin("Recherche de votre position…");
+  state.watch = navigator.geolocation.watchPosition(
+    (g) => onPosition(g.coords.latitude, g.coords.longitude, g.coords.accuracy),
+    (e) => { $("status").textContent = e.code === 1 ? "Vous avez refusé l'accès à la position. Autorisez-le dans les réglages du navigateur pour utiliser le guide." : "Position introuvable pour l'instant. Vérifiez que la localisation est activée."; },
+    { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
+};
+
+/* Démonstration : position simulée à Paris, Pont-Neuf, Sainte-Chapelle, Notre-Dame, Sorbonne, Panthéon. */
+const TRAJET = [[48.8570, 2.3413], [48.8554, 2.3450], [48.8530, 2.3490], [48.8520, 2.3470], [48.8485, 2.3435], [48.8462, 2.3462]];
+$("demo").onclick = () => {
+  begin("Démonstration : position simulée à Paris.");
+  let step = 0;
+  const perLeg = 20, total = (TRAJET.length - 1) * perLeg;
+  const tick = () => {
+    const leg = Math.min(Math.floor(step / perLeg), TRAJET.length - 2), t = (step - leg * perLeg) / perLeg;
+    const [a, b] = TRAJET[leg], [c, d] = TRAJET[leg + 1];
+    onPosition(a + (c - a) * t, b + (d - b) * t, 10).then(() => {
+      $("status").replaceChildren(el("span", "pulse"), `Démonstration : position simulée à Paris, du Pont-Neuf au Panthéon (${Math.round(step / total * 100)} %).`);
+    });
+    if (step++ >= total) clearInterval(state.demo);
+  };
+  tick();
+  state.demo = setInterval(tick, 2000);
+};
+
+$("stop").onclick = () => {
+  if (state.watch !== null) navigator.geolocation.clearWatch(state.watch);
+  clearInterval(state.demo);
+  if ("speechSynthesis" in window) speechSynthesis.cancel();
+  if (state.lock) state.lock.release().catch(() => {});
+  location.reload();
+};
+</script>
+</body>
+</html>
