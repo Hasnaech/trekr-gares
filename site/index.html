@@ -63,6 +63,7 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-si
 .mk{width:58px;height:58px;border-radius:50%;border:3px solid #fff;box-shadow:0 4px 14px rgba(0,0,0,.45);background:var(--marine) center/cover;display:flex;align-items:center;justify-content:center;font-size:26px;cursor:pointer;position:relative}
 .mk i{position:absolute;right:-6px;top:-6px;min-width:24px;height:24px;border-radius:12px;background:var(--accent);color:#fff;font:700 13px/24px system-ui;text-align:center;font-style:normal;border:2px solid #fff}
 .mk.home{width:22px;height:22px;background:var(--accent)}
+#locate{position:absolute;top:52px;left:10px;z-index:3;font:inherit;font-size:.85rem;font-weight:600;border:0;border-radius:999px;padding:8px 14px;background:#1a73e8;color:#fff;cursor:pointer}
 .me{width:18px;height:18px;border-radius:50%;background:#1a73e8;border:3px solid #fff;box-shadow:0 0 0 6px rgba(26,115,232,.25)}
 .photo{width:100%;max-height:220px;object-fit:cover;border-radius:14px;margin-top:8px;display:block}
 .credit{font-size:.72rem;color:var(--muted);margin:3px 0 0}
@@ -117,7 +118,7 @@ const hhmm = (d) => d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-
 const SUR_PLACE = { "Parc et jardin": 8, "Monument": 4, "Édifice religieux": 6, "Site culturel": 5, "Patrimoine technique": 4, "Lieu de mémoire": 4, "Site archéologique": 5, "Château et fortification": 6, "Site naturel": 8 };
 const TRES_CONNU = 20; // au-delà de 20 langues sur Wikipédia : lieu très connu
 
-const state = { T: 40, mode: "calme", tiles: new Map(), known: null, plan: null, watch: null, map: null, me: null };
+const state = { T: 40, mode: "calme", tiles: new Map(), known: null, plan: null, watch: null, map: null, me: null, real: false, onMove: null, pos: null };
 
 for (const t of [20, 40, 60, 90]) {
   const b = el("button", "chip big", t + " min");
@@ -136,7 +137,7 @@ for (const [name, la, lo] of [["Pont-Neuf", 48.8570, 2.3413], ["Abbesses, Montma
 $("go").onclick = () => {
   if (!navigator.geolocation) return say("Ce navigateur ne donne pas accès à la position. Essayez depuis un des points proposés.");
   say("Recherche de votre position…");
-  navigator.geolocation.getCurrentPosition((g) => compose(g.coords.latitude, g.coords.longitude, "votre position"),
+  navigator.geolocation.getCurrentPosition((g) => compose(g.coords.latitude, g.coords.longitude, "votre position", true),
     (e) => say(e.code === 1 ? "Vous avez refusé l'accès à la position. Autorisez-le, ou essayez depuis un des points proposés." : "Position introuvable. Vérifiez que la localisation est activée."),
     { enableHighAccuracy: true, timeout: 20000 });
 };
@@ -190,7 +191,8 @@ function build(lat, lon, places, T, mode) {
   return { lat, lon, T, mode, stops, back, total: t + back, metres: metres * 1.3, evites, mesure, autres: pool.filter((p) => !used.has(p.src)) };
 }
 
-async function compose(lat, lon, label) {
+async function compose(lat, lon, label, real) {
+  state.real = !!real;
   say("Composition du parcours…");
   let places;
   try { places = await loadAround(lat, lon); } catch { return say("Les données n'ont pas pu être chargées. Vérifiez votre connexion."); }
@@ -322,6 +324,16 @@ function init3D(plan, container, at) {
       new maplibregl.Marker({ element: m, anchor: "bottom" }).setLngLat([s.p.lo, s.p.la]).addTo(map);
     });
     replay.onclick = fly;
+    map.addControl(new maplibregl.NavigationControl({ visualizePitch: true }), "top-right");
+    const loc = el("button", null, "◎ Ma position"); loc.type = "button"; loc.id = "locate";
+    loc.onclick = () => {
+      run++; // arrête le survol
+      track((e) => { loc.textContent = e.code === 1 ? "Position refusée" : "Position introuvable"; });
+      if (state.pos) map.flyTo({ center: [state.pos.longitude, state.pos.latitude], zoom: 17.4, pitch: 60, duration: 1500 });
+      else { loc.textContent = "Recherche…"; const once = state.onMove; state.onMove = (c) => { loc.textContent = "◎ Ma position"; state.onMove = once; map.flyTo({ center: [c.longitude, c.latitude], zoom: 17.4, pitch: 60, duration: 1500 }); if (once) once(c); }; }
+    };
+    container.append(loc);
+    if (state.real) track(); // parcours composé depuis votre position : le point bleu apparaît tout de suite
     fly();
   });
   return true;
@@ -388,33 +400,54 @@ function render(plan, label) {
   window.scrollTo(0, 0);
 }
 
-/* Suivi en direct : temps restant, prochain lieu, lecture de la fiche à l'arrivée. */
+/* Position en direct : un seul suivi GPS, qui alimente le point bleu et, pendant la balade, le guidage. */
+function track(onError) {
+  if (state.watch !== null || !navigator.geolocation) return;
+  state.watch = navigator.geolocation.watchPosition((g) => {
+    state.pos = g.coords;
+    if (state.map && window.maplibregl) {
+      if (!state.me) {
+        const dot = el("div", "me");
+        dot.title = "Vous êtes ici";
+        state.me = new maplibregl.Marker({ element: dot }).setLngLat([g.coords.longitude, g.coords.latitude]).addTo(state.map);
+      }
+      state.me.setLngLat([g.coords.longitude, g.coords.latitude]);
+    }
+    if (state.onMove) state.onMove(g.coords);
+  }, (e) => { if (onError) onError(e); }, { enableHighAccuracy: true, maximumAge: 5000, timeout: 30000 });
+}
+
+/* Balade en direct : temps restant, prochain lieu, caméra qui suit, lecture de la fiche à l'arrivée. */
 function follow(plan, start, btn) {
   if (!navigator.geolocation) return;
   btn.hidden = true;
-  const live = $("live"); live.className = ""; live.id = "msg2";
-  live.style.cssText = "position:sticky;bottom:12px;background:var(--marine);color:var(--bg);border-radius:18px;padding:14px 16px;margin-top:16px;font-weight:600";
-  let next = 0;
+  const live = $("live");
+  live.style.cssText = "position:sticky;bottom:12px;z-index:4;background:var(--marine);color:var(--bg);border-radius:18px;padding:14px 16px;margin-top:16px;font-weight:600";
+  live.textContent = "Recherche de votre position…";
+  let next = 0, touched = 0;
+  if (state.map) for (const ev of ["dragstart", "zoomstart", "pitchstart", "rotatestart"]) state.map.on(ev, (e) => { if (e.originalEvent) touched = Date.now(); });
   if ("speechSynthesis" in window) speechSynthesis.speak(Object.assign(new SpeechSynthesisUtterance("C'est parti."), { lang: "fr-FR" }));
   if (navigator.wakeLock) navigator.wakeLock.request("screen").catch(() => {});
-  state.watch = navigator.geolocation.watchPosition((g) => {
-    if (state.map && window.maplibregl) {
-      if (!state.me) state.me = new maplibregl.Marker({ element: el("div", "me") }).setLngLat([g.coords.longitude, g.coords.latitude]).addTo(state.map);
-      state.me.setLngLat([g.coords.longitude, g.coords.latitude]);
-    }
+  state.onMove = (c) => {
     const left = Math.round(plan.T - (Date.now() - start.getTime()) / 60000);
     const target = next < plan.stops.length ? plan.stops[next].p : { la: plan.lat, lo: plan.lon, n: "le point de départ" };
-    const m = dist(g.coords.latitude, g.coords.longitude, target.la, target.lo);
-    if (next < plan.stops.length && m <= 60 && g.coords.accuracy <= 100) {
+    const m = dist(c.latitude, c.longitude, target.la, target.lo);
+    if (next < plan.stops.length && m <= 60 && c.accuracy <= 100) {
       $("stop" + next).classList.add("done");
       if (navigator.vibrate) navigator.vibrate([120, 60, 120]);
       if ("speechSynthesis" in window) speechSynthesis.speak(Object.assign(new SpeechSynthesisUtterance(`${target.n}. ${target.d || ""}`), { lang: "fr-FR" }));
       next++;
     }
-    const back = walkMin(dist(g.coords.latitude, g.coords.longitude, plan.lat, plan.lon));
-    live.textContent = `${left > 0 ? "Il vous reste " + left + " min" : "Temps écoulé"} · prochain : ${target.n} à ${Math.round(m / 10) * 10} m · retour direct : ${Math.max(1, Math.round(back))} min`
+    // La caméra suit, tournée vers le prochain lieu, sauf si vous venez de bouger la carte vous-même.
+    if (state.map && Date.now() - touched > 15000)
+      state.map.easeTo({ center: [c.longitude, c.latitude], zoom: 17.4, pitch: 62, bearing: bearing(c.latitude, c.longitude, target.la, target.lo), duration: 1200 });
+    const back = walkMin(dist(c.latitude, c.longitude, plan.lat, plan.lon));
+    live.textContent = (c.accuracy > 100 ? `Signal GPS imprécis (${Math.round(c.accuracy)} m) · ` : "")
+      + `${left > 0 ? "Il vous reste " + left + " min" : "Temps écoulé"} · prochain : ${target.n} à ${Math.round(m / 10) * 10} m · retour direct : ${Math.max(1, Math.round(back))} min`
       + (left > 0 && back > left ? " · rentrez maintenant pour être à l'heure" : "");
-  }, () => { live.textContent = "Position indisponible : le suivi en direct est en pause."; }, { enableHighAccuracy: true, maximumAge: 5000 });
+  };
+  if (state.pos) state.onMove(state.pos);
+  track((e) => { live.textContent = e.code === 1 ? "Accès à la position refusé : autorisez-le dans les réglages du navigateur pour être guidé." : "Position indisponible pour l'instant : le guidage reprendra dès qu'elle revient."; });
 }
 </script>
 </body>
