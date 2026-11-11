@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="theme-color" content="#1e3a5f">
 <title>Trekr : j'ai 40 minutes</title>
-<meta name="description" content="Dites combien de temps vous avez. Trekr compose un parcours à pied, minute par minute, loin des lieux où tout le monde va, et vous ramène à l'heure.">
+<meta name="description" content="Dites combien de temps vous avez et de quoi vous avez envie. Trekr compose un parcours à pied avec des lieux ouverts à cette heure-là, loin des foules, et vous ramène à l'heure.">
 <link rel="stylesheet" href="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.css">
 <script src="https://unpkg.com/maplibre-gl@4.7.1/dist/maplibre-gl.js" defer></script>
 <style>
@@ -54,8 +54,8 @@ ol.tl li{display:grid;grid-template-columns:58px 1fr;gap:12px;padding:12px 0;bor
 .tag.warn{background:var(--warnbg);color:var(--warn);border-color:transparent}
 .done h3{text-decoration:line-through;opacity:.6}
 footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-size:.85rem;color:var(--muted)}
-#map{position:relative;height:min(68vh,560px);border-radius:22px;overflow:hidden;border:1px solid var(--line);margin:14px 0;background:var(--card)}
-#cap{position:absolute;left:10px;right:10px;bottom:38px;z-index:3;background:rgba(10,16,24,.82);color:#fff;border-radius:16px;padding:10px 14px;display:flex;gap:12px;align-items:center;backdrop-filter:blur(8px);transition:opacity .4s}
+#map{position:relative;height:min(58vh,560px);border-radius:22px;overflow:hidden;border:1px solid var(--line);margin:14px 0;background:var(--card)}
+#cap{position:absolute;left:10px;right:52px;bottom:10px;z-index:3;background:rgba(10,16,24,.82);color:#fff;border-radius:16px;padding:10px 14px;display:flex;gap:12px;align-items:center;backdrop-filter:blur(8px);transition:opacity .4s}
 #cap img{width:64px;height:64px;border-radius:12px;object-fit:cover;flex:none}
 #cap b{display:block;font-size:1.05rem;line-height:1.2}
 #cap span{font-size:.82rem;opacity:.85}
@@ -68,6 +68,10 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-si
 .photo{width:100%;max-height:220px;object-fit:cover;border-radius:14px;margin-top:8px;display:block}
 .credit{font-size:.72rem;color:var(--muted);margin:3px 0 0}
 [hidden]{display:none!important}
+
+.tag.first{background:var(--marine);color:var(--bg);border-color:transparent;font-weight:600}
+.when{font:inherit;padding:9px 12px;border-radius:14px;border:1px solid var(--line);background:var(--bg);color:var(--fg)}
+.util{border:1px dashed var(--line);border-radius:16px;padding:10px 14px;font-size:.9rem;margin:12px 0}
 </style>
 </head>
 <body>
@@ -76,12 +80,22 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-si
 
   <section id="ask">
     <h1>J'ai <em id="hT">40</em> minutes.</h1>
-    <p class="lead">Dites combien de temps vous avez. Trekr compose un parcours à pied, minute par minute, loin des lieux où tout le monde va, et vous ramène à l'heure.</p>
+    <p class="lead">Dites de quoi vous avez envie. Trekr compose un parcours à pied avec ce qui est ouvert à cette heure-là, loin des foules, et vous ramène à l'heure.</p>
+
+    <p class="label">De quoi avez-vous envie&nbsp;?</p>
+    <div class="row" id="envies"></div>
 
     <p class="label">Combien de temps&nbsp;?</p>
     <div class="row" id="times"></div>
 
-    <p class="label">Quelle envie&nbsp;?</p>
+    <p class="label">Quand&nbsp;?</p>
+    <div class="row">
+      <button class="chip" id="now" type="button" aria-pressed="true">Maintenant</button>
+      <button class="chip" id="later" type="button" aria-pressed="false">Plus tard</button>
+      <input class="when" id="when" type="datetime-local" hidden aria-label="Jour et heure de départ">
+    </div>
+
+    <p class="label">Avec ou sans la foule&nbsp;?</p>
     <div class="row">
       <button class="chip" data-mode="calme" type="button" aria-pressed="true">Hors des foules</button>
       <button class="chip" data-mode="connu" type="button" aria-pressed="false">Les incontournables</button>
@@ -97,11 +111,12 @@ footer{margin-top:40px;padding-top:18px;border-top:1px solid var(--line);font-si
   <section id="plan" hidden></section>
 
   <footer>
-    <p><b>Comment Trekr choisit.</b> Les lieux viennent de DATAtourisme, la base publique des offices de tourisme (extraction d'août 2025). « Hors des foules » écarte les lieux très connus : la notoriété est mesurée par le nombre de langues dans lesquelles le lieu a une page Wikipédia (source Wikidata, novembre 2026). C'est une mesure de notoriété, pas un comptage de visiteurs, et elle n'existe pour l'instant qu'à Paris.</p>
-    <p><b>Ce que Trekr ne sait pas.</b> Les horaires d'ouverture, les travaux, la météo. Les temps de marche sont estimés (distance à vol d'oiseau majorée de 30 %, 4,5 km/h). Les musées sont exclus des parcours courts : ils demandent plus de temps.</p>
-    <p><b>Écologie, sans slogan.</b> Tout le parcours se fait à pied : aucun trajet motorisé n'est proposé. Aller vers des lieux moins connus répartit les visites, c'est tout ce que Trekr affirme.</p>
-    <p><b>Carte et photos.</b> La ville en 3D est dessinée à partir des bâtiments d'OpenStreetMap (© contributeurs OpenStreetMap, tuiles OpenFreeMap et OpenMapTiles) ; elle est chargée pour le quartier affiché, votre position exacte n'est pas transmise. Les photos viennent de Wikimedia Commons, chacune avec son auteur et sa licence. Le tracé relie les lieux en ligne droite : il ne suit pas encore les rues.</p>
-    <p>Sources : DATAtourisme (Licence Ouverte 2.0), Wikidata (CC0), OpenStreetMap (ODbL), Wikimedia Commons. Code et données ouverts.</p>
+    <p><b>D'où viennent les lieux.</b> Le patrimoine (monuments, jardins, églises) vient de DATAtourisme, la base publique des offices de tourisme (août 2025). Les cafés, boulangeries, librairies, bars, œuvres d'art de rue et fontaines viennent d'OpenStreetMap, la carte libre tenue par des bénévoles (novembre 2026, Paris seulement pour l'instant). Les enseignes de chaîne sont écartées.</p>
+    <p><b>Horaires.</b> Un commerce n'est proposé que s'il est indiqué ouvert à l'heure de votre passage, ou, quand ses horaires ne sont pas renseignés, à une heure où ce type de lieu est habituellement ouvert : c'est alors signalé « à vérifier ». Jardins, églises et lieux culturels ne sont pas proposés la nuit. Trekr ne connaît ni les fermetures exceptionnelles ni les jours fériés.</p>
+    <p><b>Hors des foules.</b> Les lieux très connus sont écartés : la notoriété est le nombre de langues dans lesquelles le lieu a une page Wikipédia (Wikidata). C'est une mesure de notoriété, pas un comptage de visiteurs. Trekr ne sait pas si un café est bon : il sait qu'il existe, où, et quand il ouvre.</p>
+    <p><b>Écologie, sans slogan.</b> Tout se fait à pied, aucun trajet motorisé n'est proposé, et les visites sont réparties vers des lieux moins connus. Trekr n'affirme rien de plus.</p>
+    <p><b>Carte et photos.</b> Ville en 3D d'après OpenStreetMap (tuiles OpenFreeMap et OpenMapTiles), chargée pour le quartier affiché. Photos Wikimedia Commons, avec auteur et licence. Temps de marche estimés (vol d'oiseau majoré de 30 %, 4,5 km/h) ; le tracé ne suit pas encore les rues.</p>
+    <p>Sources : DATAtourisme (Licence Ouverte 2.0), OpenStreetMap (ODbL), Wikidata (CC0), Wikimedia Commons. Code et données ouverts.</p>
   </footer>
 </main>
 
@@ -113,31 +128,109 @@ const RAD = Math.PI / 180;
 function dist(a, b, c, d) { const h = Math.sin((c - a) * RAD / 2) ** 2 + Math.cos(a * RAD) * Math.cos(c * RAD) * Math.sin((d - b) * RAD / 2) ** 2; return 2 * 6371000 * Math.asin(Math.sqrt(h)); }
 const walkMin = (m) => m * 1.3 / 75; // 4,5 km/h, détour de 30 %
 const hhmm = (d) => d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
+const pad = (n) => String(n).padStart(2, "0");
 
-/* Temps passé sur place, en minutes. Les catégories absentes ne sont pas proposées en parcours court. */
-const SUR_PLACE = { "Parc et jardin": 8, "Monument": 4, "Édifice religieux": 6, "Site culturel": 5, "Patrimoine technique": 4, "Lieu de mémoire": 4, "Site archéologique": 5, "Château et fortification": 6, "Site naturel": 8 };
+/* Temps passé sur place, en minutes. Une catégorie absente n'est pas proposée (musées : trop longs). */
+const SUR_PLACE = { "Parc et jardin": 8, "Monument": 4, "Édifice religieux": 6, "Site culturel": 5, "Patrimoine technique": 4, "Lieu de mémoire": 4, "Site archéologique": 5, "Château et fortification": 6, "Site naturel": 8,
+  "Café": 15, "Bar": 20, "Glacier": 6, "Boulangerie": 5, "Pâtisserie": 5, "Chocolaterie": 5, "Fromagerie": 4, "Librairie": 10, "Galerie": 8, "Point de vue": 5, "Art de rue": 3 };
+const PAUSES = new Set(["Café", "Bar", "Glacier", "Boulangerie", "Pâtisserie", "Chocolaterie", "Fromagerie"]);
 const TRES_CONNU = 20; // au-delà de 20 langues sur Wikipédia : lieu très connu
 
-const state = { T: 40, mode: "calme", tiles: new Map(), known: null, plan: null, watch: null, map: null, me: null, real: false, onMove: null, pos: null };
+/* Envies : un poids négatif attire une catégorie, « besoin » garantit qu'elle figure au parcours. */
+const ENVIES = {
+  surprise: { label: "Surprenez-moi", w: { "Café": 2, "Bar": 6, "Fromagerie": 3, "Chocolaterie": 2 } },
+  cafe: { label: "Un café au calme", besoin: ["Café"], w: { "Café": -12, "Parc et jardin": -2, "Librairie": -2, "Bar": 9 } },
+  vert: { label: "De la verdure", w: { "Parc et jardin": -10, "Site naturel": -10, "Point de vue": -7, "Bar": 9, "Café": 3 } },
+  beau: { label: "Du beau à voir", w: { "Monument": -6, "Édifice religieux": -5, "Art de rue": -6, "Galerie": -5, "Point de vue": -5, "Site culturel": -3, "Bar": 9, "Café": 4 } },
+  gourmand: { label: "Une pause gourmande", besoin: ["Boulangerie", "Pâtisserie", "Glacier", "Chocolaterie"], w: { "Boulangerie": -10, "Pâtisserie": -11, "Glacier": -9, "Chocolaterie": -9, "Bar": 9 } },
+  livres: { label: "Des livres et des galeries", besoin: ["Librairie", "Galerie"], w: { "Librairie": -11, "Galerie": -8, "Café": -1, "Bar": 9 } },
+  verre: { label: "Boire un verre", besoin: ["Bar"], w: { "Bar": -14, "Café": 6 } },
+};
 
-for (const t of [20, 40, 60, 90]) {
-  const b = el("button", "chip big", t + " min");
-  b.type = "button";
-  b.setAttribute("aria-pressed", t === state.T);
-  b.onclick = () => { state.T = t; $("hT").textContent = t; document.querySelectorAll("#times .chip").forEach((c) => c.setAttribute("aria-pressed", c === b)); };
-  $("times").append(b);
+/* ── Horaires ─────────────────────────────────────────────────────────── */
+const JOURS = ["Su", "Mo", "Tu", "We", "Th", "Fr", "Sa"];
+/* Lit la syntaxe d'horaires d'OpenStreetMap dans ses formes courantes. Renvoie { open, until } ou null si illisible. */
+function horaires(oh, date) {
+  if (!oh) return null;
+  const txt = oh.trim();
+  if (txt === "24/7") return { open: true, until: null };
+  if (/[a-z]{4,}|\d{4}|Jan|Feb|Mar|Apr|May|Jun|Jul|Aug|Sep|Oct|Nov|Dec|week|\[|\|\||"/.test(txt.replace(/off|closed/g, ""))) return null;
+  const perDay = Array.from({ length: 7 }, () => null); // par jour : liste d'intervalles en minutes
+  for (let rule of txt.split(";")) {
+    if (/^\s*(PH|SH)(\s*,\s*(PH|SH))*\s+\S/.test(rule) || /^\s*(PH|SH)\s*$/.test(rule)) continue; // règle des jours fériés : ignorée
+    rule = rule.trim().replace(/,?\s*(PH|SH)\b/g, "").replace(/^(PH|SH)\s*,?/, "").trim();
+    if (!rule) continue;
+    const m = /^((?:(?:Mo|Tu|We|Th|Fr|Sa|Su)(?:\s*-\s*(?:Mo|Tu|We|Th|Fr|Sa|Su))?\s*,?\s*)+)?\s*(.*)$/.exec(rule);
+    if (!m) return null;
+    let days = [];
+    if (m[1]) for (const part of m[1].split(",").map((x) => x.trim()).filter(Boolean)) {
+      const [a, b] = part.split("-").map((x) => JOURS.indexOf(x.trim()));
+      if (a < 0) return null;
+      if (b === undefined || Number.isNaN(b)) days.push(a); else { if (b < 0) return null; for (let d = a; ; d = (d + 1) % 7) { days.push(d); if (d === b) break; } }
+    } else days = [0, 1, 2, 3, 4, 5, 6];
+    const rest = m[2].trim();
+    let spans = [];
+    if (rest === "off" || rest === "closed") spans = [];
+    else if (rest === "") continue;
+    else for (const r of rest.split(",")) {
+      const t = /^\s*(\d{1,2}):(\d{2})\s*-\s*(\d{1,2}):(\d{2})\+?\s*$/.exec(r);
+      if (!t) return null;
+      let a = +t[1] * 60 + +t[2], b = +t[3] * 60 + +t[4];
+      if (b <= a) b += 1440; // ferme après minuit
+      spans.push([a, b]);
+    }
+    for (const d of days) perDay[d] = spans;
+  }
+  if (perDay.every((d) => d === null)) return null;
+  const day = date.getDay(), min = date.getHours() * 60 + date.getMinutes();
+  for (const [a, b] of perDay[day] || []) if (min >= a && min < b) return { open: true, until: `${pad(Math.floor(b / 60) % 24)}:${pad(b % 60)}`, left: b - min };
+  for (const [a, b] of perDay[(day + 6) % 7] || []) if (b > 1440 && min < b - 1440) return { open: true, until: `${pad(Math.floor((b - 1440) / 60))}:${pad(b % 60)}`, left: b - 1440 - min };
+  return { open: false, until: null };
 }
+/* Heures où un type de lieu est habituellement ouvert, quand ses horaires ne sont pas renseignés. null = à toute heure. */
+const HABITUEL = { "Café": [8, 19], "Bar": [17, 25], "Glacier": [12, 22], "Boulangerie": [7, 19.5], "Pâtisserie": [10, 19], "Chocolaterie": [10, 19], "Fromagerie": [9.5, 19], "Librairie": [10, 19], "Galerie": [11, 19],
+  "Parc et jardin": [8, 20], "Site naturel": [8, 20], "Édifice religieux": [8, 19], "Site culturel": [10, 18], "Site archéologique": [10, 18], "Château et fortification": [10, 18] };
+function etat(p, date) {
+  const h = horaires(p.oh, date);
+  if (h) return h.open ? { ok: true, sur: true, until: h.until, left: h.left ?? 1e9 } : { ok: false };
+  const plage = HABITUEL[p.c];
+  if (!plage) return { ok: true, sur: true, dehors: true, left: 1e9 }; // monument, art de rue, point de vue : se voit de l'extérieur
+  let x = date.getHours() + date.getMinutes() / 60;
+  if (plage[1] > 24 && x < plage[1] - 24) x += 24;
+  return x >= plage[0] && x < plage[1] ? { ok: true, sur: false, left: (plage[1] - x) * 60 } : { ok: false };
+}
+
+const state = { T: 40, mode: "calme", envie: "surprise", when: null, tiles: new Map(), known: null, plan: null, watch: null, map: null, me: null, real: false, onMove: null, pos: null };
+
+function chips(box, items, current, onPick, cls) {
+  for (const [key, label] of items) {
+    const b = el("button", "chip" + (cls || ""), label);
+    b.type = "button";
+    b.setAttribute("aria-pressed", key === current);
+    b.onclick = () => { box.querySelectorAll(".chip").forEach((c) => c.setAttribute("aria-pressed", c === b)); onPick(key); };
+    box.append(b);
+  }
+}
+chips($("envies"), Object.entries(ENVIES).map(([k, v]) => [k, v.label]), state.envie, (k) => { state.envie = k; });
+chips($("times"), [20, 40, 60, 90].map((t) => [t, t + " min"]), state.T, (t) => { state.T = t; $("hT").textContent = t; }, " big");
 document.querySelectorAll("[data-mode]").forEach((b) => { b.onclick = () => { state.mode = b.dataset.mode; document.querySelectorAll("[data-mode]").forEach((c) => c.setAttribute("aria-pressed", c === b)); }; });
-for (const [name, la, lo] of [["Pont-Neuf", 48.8570, 2.3413], ["Abbesses, Montmartre", 48.8843, 2.3384], ["Canal Saint-Martin", 48.8722, 2.3655], ["Bastille", 48.8532, 2.3692], ["Butte-aux-Cailles", 48.8277, 2.3506]]) {
+const localISO = (d) => `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}T${pad(d.getHours())}:${pad(d.getMinutes())}`;
+$("now").onclick = () => { $("now").setAttribute("aria-pressed", true); $("later").setAttribute("aria-pressed", false); $("when").hidden = true; };
+$("later").onclick = () => { $("later").setAttribute("aria-pressed", true); $("now").setAttribute("aria-pressed", false); $("when").hidden = false; if (!$("when").value) { const d = new Date(Date.now() + 3600000); d.setMinutes(0); $("when").value = localISO(d); } };
+const startDate = () => (!$("when").hidden && $("when").value ? new Date($("when").value) : new Date());
+
+const DEMOS = [["Pont-Neuf", 48.8570, 2.3413], ["Abbesses, Montmartre", 48.8843, 2.3384], ["Canal Saint-Martin", 48.8722, 2.3655], ["Bastille", 48.8532, 2.3692], ["Butte-aux-Cailles", 48.8277, 2.3506]];
+for (const [name, la, lo] of DEMOS) {
   const b = el("button", "chip", name);
   b.type = "button";
-  b.onclick = () => compose(la, lo, name);
+  b.onclick = () => compose(la, lo, name, false, startDate());
   $("demos").append(b);
 }
 $("go").onclick = () => {
   if (!navigator.geolocation) return say("Ce navigateur ne donne pas accès à la position. Essayez depuis un des points proposés.");
   say("Recherche de votre position…");
-  navigator.geolocation.getCurrentPosition((g) => compose(g.coords.latitude, g.coords.longitude, "votre position", true),
+  const when = startDate();
+  navigator.geolocation.getCurrentPosition((g) => compose(g.coords.latitude, g.coords.longitude, "votre position", true, when),
     (e) => say(e.code === 1 ? "Vous avez refusé l'accès à la position. Autorisez-le, ou essayez depuis un des points proposés." : "Position introuvable. Vérifiez que la localisation est activée."),
     { enableHighAccuracy: true, timeout: 20000 });
 };
@@ -152,35 +245,44 @@ async function loadAround(lat, lon) {
   return wanted.flatMap((k) => state.tiles.get(k) || []);
 }
 
-/* Compose une boucle : à chaque étape, le lieu le plus intéressant qui laisse le temps de rentrer. */
-function build(lat, lon, places, T, mode) {
-  const reach = (T / 2) * 75 / 1.3;
-  const pool = places.filter((p) => SUR_PLACE[p.c] && dist(lat, lon, p.la, p.lo) <= reach);
+/* Compose une boucle : à chaque étape, le lieu ouvert le plus proche de l'envie qui laisse le temps de rentrer. */
+function build(lat, lon, places, T, mode, envie, start) {
+  const env = ENVIES[envie] || ENVIES.surprise, reach = (T / 2) * 75 / 1.3;
+  const near = places.filter((p) => dist(lat, lon, p.la, p.lo) <= reach);
+  const pool = near.filter((p) => SUR_PLACE[p.c]);
   const mesure = pool.some((p) => p.no !== undefined);
-  // Lieux très connus écartés ; un même monument publié sous plusieurs noms n'est cité qu'une fois.
   const evites = [];
   if (mode === "calme") for (const p of pool.filter((p) => (p.no || 0) > TRES_CONNU).sort((a, b) => b.no - a.no))
     if (!evites.some((e) => e.no === p.no && dist(e.la, e.lo, p.la, p.lo) < 250)) evites.push(p);
   const cands = pool.filter((p) => mode !== "calme" || (p.no || 0) <= TRES_CONNU);
-  const stops = [], used = new Set(), cats = {};
-  let cur = { la: lat, lo: lon }, t = 0;
+  const stops = [], used = new Set(), names = new Set(), cats = {};
+  const maxPauses = T >= 90 ? 2 : 1;
+  let cur = { la: lat, lo: lon }, t = 0, pauses = 0, fermes = 0;
   for (;;) {
     let best = null;
+    const manque = env.besoin && !stops.some((s) => env.besoin.includes(s.p.c));
     for (const p of cands) {
-      if (used.has(p.src)) continue;
+      if (used.has(p.src) || names.has(p.n)) continue;
+      const pause = PAUSES.has(p.c);
+      if (pause && pauses >= maxPauses) continue;
+      if (p.c === "Art de rue" && (cats[p.c] || 0) >= 2) continue;
       const go = walkMin(dist(cur.la, cur.lo, p.la, p.lo)), stay = SUR_PLACE[p.c], back = walkMin(dist(p.la, p.lo, lat, lon));
-      if (go < 1 && stops.length && stops[stops.length - 1].p.n === p.n) continue;
       if (t + go + stay + back > T) continue;
-      // Coût : marche, répétition d'une même catégorie, et notoriété (fuie ou recherchée selon l'envie).
-      const cost = go + (cats[p.c] || 0) * 3 + (mode === "calme" ? (p.no || 0) * 0.25 : -(p.no || 0) * 0.4);
-      if (!best || cost < best.cost) best = { p, go, stay, cost };
+      const st = etat(p, new Date(start.getTime() + (t + go) * 60000));
+      if (!st.ok || st.left < stay) { if (go < 6) fermes++; continue; }
+      // Coût : marche, répétition, envie, notoriété, horaires incertains, lieux de vie sans description.
+      let cost = go + (cats[p.c] || 0) * 4 + (env.w[p.c] || 0) + (st.sur ? 0 : 3) + (p.o && !pause ? 1 : 0) + (p.c === p.n || ["Graffiti", "Fresque murale", "Sculpture", "Statue", "Mosaïque"].includes(p.n) ? 3 : 0);
+      cost += mode === "calme" ? (p.no || 0) * 0.25 : -(p.no || 0) * 0.4;
+      if (manque && env.besoin.includes(p.c)) cost -= 6;
+      if (!best || cost < best.cost) best = { p, go, stay, cost, st };
     }
     if (!best) break;
     t += best.go;
-    stops.push({ p: best.p, arrive: t, go: best.go, stay: best.stay });
+    stops.push({ p: best.p, arrive: t, go: best.go, stay: best.stay, st: best.st });
     t += best.stay;
-    used.add(best.p.src);
+    used.add(best.p.src); names.add(best.p.n);
     cats[best.p.c] = (cats[best.p.c] || 0) + 1;
+    if (PAUSES.has(best.p.c)) pauses++;
     cur = best.p;
     if (stops.length >= 8) break;
   }
@@ -188,27 +290,40 @@ function build(lat, lon, places, T, mode) {
   let metres = 0, prev = { la: lat, lo: lon };
   for (const s of stops) { metres += dist(prev.la, prev.lo, s.p.la, s.p.lo); prev = s.p; }
   metres += stops.length ? dist(prev.la, prev.lo, lat, lon) : 0;
-  return { lat, lon, T, mode, stops, back, total: t + back, metres: metres * 1.3, evites, mesure, autres: pool.filter((p) => !used.has(p.src)) };
+  const eau = near.filter((p) => p.c === "Fontaine à boire" && stops.some((s) => dist(s.p.la, s.p.lo, p.la, p.lo) < 150));
+  return { lat, lon, T, mode, envie, start, stops, back, total: t + back, metres: metres * 1.3, evites, mesure, eau, fermes,
+    manque: !!(env.besoin && !stops.some((s) => env.besoin.includes(s.p.c))), autres: pool.filter((p) => !used.has(p.src) && !p.o) };
 }
 
-async function compose(lat, lon, label, real) {
+async function compose(lat, lon, label, real, start) {
   state.real = !!real;
   say("Composition du parcours…");
   let places;
   try { places = await loadAround(lat, lon); } catch { return say("Les données n'ont pas pu être chargées. Vérifiez votre connexion."); }
-  const plan = build(lat, lon, places, state.T, state.mode);
+  const plan = build(lat, lon, places, state.T, state.mode, state.envie, start || new Date());
   state.plan = plan;
-  if (!plan.stops.length) return say(`Aucun lieu connu n'est atteignable à pied en ${state.T} minutes depuis ${label}. La base ne couvre pas tout le territoire de la même façon : essayez plus de temps, ou un des points proposés.`);
+  if (!plan.stops.length) return say(`Rien d'ouvert ou d'atteignable à pied en ${state.T} minutes depuis ${label} à ${hhmm(plan.start)}. Essayez une autre envie, plus de temps ou une autre heure.`);
   say("");
+  try { history.replaceState(null, "", "#" + new URLSearchParams({ la: lat.toFixed(5), lo: lon.toFixed(5), t: state.T, e: state.envie, m: state.mode, h: localISO(plan.start), n: label })); } catch {}
   render(plan, label);
 }
 
-function nototag(p) {
-  if (p.no === undefined) return null;
-  if (p.no === 0) return el("span", "tag ok", "Confidentiel : aucune page Wikipédia");
-  if (p.no <= 5) return el("span", "tag ok", `Peu connu : ${p.no} langue${p.no > 1 ? "s" : ""} sur Wikipédia`);
-  if (p.no <= TRES_CONNU) return el("span", "tag", `Connu : ${p.no} langues sur Wikipédia`);
-  return el("span", "tag warn", `Très connu : ${p.no} langues sur Wikipédia`);
+/* Une raison d'y aller, faite uniquement de faits connus. */
+function raisons(s) {
+  const p = s.p, out = [];
+  if (s.st.dehors) out.push("Se voit de l'extérieur, à toute heure");
+  else if (s.st.sur && s.st.until) out.push(`Ouvert jusqu'à ${s.st.until}`);
+  else if (s.st.sur) out.push("Ouvert en continu");
+  else out.push("Horaires non renseignés : à vérifier");
+  if (p.ter) out.push("Terrasse");
+  if (p.par) out.push(`Œuvre de ${p.par}`);
+  if (p.o && PAUSES.has(p.c)) out.push("Pas une enseigne de chaîne");
+  if (p.no === 0) out.push("Hors des radars : aucune page Wikipédia");
+  else if (p.no !== undefined && p.no <= 5) out.push(`Peu connu : ${p.no} langue${p.no > 1 ? "s" : ""} sur Wikipédia`);
+  else if (p.no !== undefined && p.no <= TRES_CONNU) out.push(`Connu : ${p.no} langues sur Wikipédia`);
+  else if (p.no !== undefined) out.push(`Très connu : ${p.no} langues sur Wikipédia`);
+  if (p.pmr === true) out.push("Accessible en fauteuil (déclaré)");
+  return out;
 }
 
 function drawMap(plan) {
@@ -241,7 +356,7 @@ function drawMap(plan) {
 }
 
 /* ── Ville en 3D : vrais bâtiments, photos des monuments, survol du parcours ── */
-const EMOJI = { "Parc et jardin": "🌳", "Monument": "🏛️", "Édifice religieux": "⛪", "Site culturel": "🎭", "Patrimoine technique": "⚙️", "Lieu de mémoire": "🕯️", "Site archéologique": "🏺", "Château et fortification": "🏰", "Site naturel": "🌿" };
+const EMOJI = { "Café": "☕", "Bar": "🍷", "Glacier": "🍦", "Boulangerie": "🥐", "Pâtisserie": "🍰", "Librairie": "📚", "Chocolaterie": "🍫", "Fromagerie": "🧀", "Point de vue": "🔭", "Art de rue": "🎨", "Galerie": "🖼️", "Parc et jardin": "🌳", "Monument": "🏛️", "Édifice religieux": "⛪", "Site culturel": "🎭", "Patrimoine technique": "⚙️", "Lieu de mémoire": "🕯️", "Site archéologique": "🏺", "Château et fortification": "🏰", "Site naturel": "🌿" };
 function bearing(a, b, c, d) { const y = Math.sin((d - b) * RAD) * Math.cos(c * RAD), x = Math.cos(a * RAD) * Math.sin(c * RAD) - Math.sin(a * RAD) * Math.cos(c * RAD) * Math.cos((d - b) * RAD); return (Math.atan2(y, x) / RAD + 360) % 360; }
 function disc(la, lo, r) { const ring = []; for (let i = 0; i <= 24; i++) { const t = i / 24 * 2 * Math.PI; ring.push([lo + r * Math.cos(t) / (111320 * Math.cos(la * RAD)), la + r * Math.sin(t) / 110540]); } return ring; }
 const wait = (ms) => new Promise((r) => setTimeout(r, ms));
@@ -344,18 +459,26 @@ function render(plan, label) {
   const box = $("plan");
   box.hidden = false;
   box.replaceChildren();
-  const start = new Date();
+  const start = plan.start;
   const at = (min) => hhmm(new Date(start.getTime() + min * 60000));
+  const demain = start.toDateString() !== new Date().toDateString();
   box.append(el("h1", null, `${Math.round(plan.total)} minutes, ${plan.stops.length} lieu${plan.stops.length > 1 ? "x" : ""}.`));
-  box.append(el("p", "lead", `Depuis ${label}, ${plan.mode === "calme" ? "loin des lieux où tout le monde va" : "par les lieux les plus connus"}. Retour à ${at(plan.total)}.`));
+  box.append(el("p", "lead", `${ENVIES[plan.envie].label} depuis ${label}, départ ${demain ? start.toLocaleDateString("fr-FR", { weekday: "long", day: "numeric", month: "long" }) + " à " : "à "}${at(0)}, retour à ${at(plan.total)}.`));
   const mapBox = el("div"); mapBox.id = "map";
   box.append(mapBox);
   if (!init3D(plan, mapBox, at)) mapBox.replaceWith(drawMap(plan)); // repli : tracé simple sans 3D
+
+  const live = el("div"); live.id = "live";
+  const goBtn = el("button", "btn", "C'est parti, suivez-moi"); goBtn.type = "button"; goBtn.style.marginTop = "6px";
+  goBtn.onclick = () => follow(plan, new Date(), goBtn);
+  box.append(goBtn, live);
+
   const sum = el("div", "sum");
   for (const [v, l] of [[Math.round(plan.total) + " min", `sur ${plan.T} disponibles`], [(plan.metres / 1000).toFixed(1).replace(".", ",") + " km", "à pied, estimés"], ["0", "trajet motorisé"]]) { const c = el("div"); c.append(el("b", null, v), el("span", "small", l)); sum.append(c); }
   box.append(sum);
+  if (plan.manque) box.append(el("p", "util", `Aucun lieu correspondant à « ${ENVIES[plan.envie].label} » n'est indiqué ouvert à cette heure dans le temps disponible. Voici ce qui s'en approche le plus.`));
   if (plan.evites.length) box.append(el("p", "small", `Écartés car très connus : ${plan.evites.slice(0, 4).map((p) => p.n).join(", ")}${plan.evites.length > 4 ? ` et ${plan.evites.length - 4} autre${plan.evites.length > 5 ? "s" : ""}` : ""}.`));
-  if (!plan.mesure) box.append(el("p", "small", "La mesure de notoriété n'existe pas encore dans ce secteur : le parcours est composé au plus proche."));
+  if (plan.eau.length) box.append(el("p", "util", `💧 ${plan.eau.length} fontaine${plan.eau.length > 1 ? "s" : ""} à boire à moins de 150 m du parcours.`));
 
   const tl = el("ol", "tl");
   const li0 = el("li"); li0.append(el("span", "time", at(0)), el("h3", null, "Départ")); tl.append(li0);
@@ -366,8 +489,7 @@ function render(plan, label) {
     body.append(el("div", "walk", `${Math.max(1, Math.round(s.go))} min de marche`), el("h3", null, `${i + 1}. ${s.p.n}`));
     const tags = el("div");
     tags.append(el("span", "tag", s.p.c), el("span", "tag", `${s.stay} min sur place`));
-    const n = nototag(s.p); if (n) tags.append(n);
-    if (s.p.pmr === true) tags.append(el("span", "tag ok", "Accessible en fauteuil (déclaré)"));
+    raisons(s).forEach((r, k) => tags.append(el("span", "tag" + (k === 0 ? " first" : r.startsWith("Horaires non") ? " warn" : r.startsWith("Hors des radars") || r.startsWith("Peu connu") || r.startsWith("Accessible") ? " ok" : ""), r)));
     body.append(tags);
     if (s.p.img) {
       const im = el("img", "photo"); im.src = s.p.img.u; im.alt = s.p.n; im.loading = "lazy";
@@ -378,7 +500,7 @@ function render(plan, label) {
     if (s.p.d) body.append(el("p", null, s.p.d));
     const links = el("p", "small");
     const a = el("a", null, "Voir sur la carte"); a.href = `https://www.openstreetmap.org/?mlat=${s.p.la}&mlon=${s.p.lo}#map=18/${s.p.la}/${s.p.lo}`; a.target = "_blank"; a.rel = "noopener noreferrer";
-    const f = el("a", null, "fiche officielle"); f.href = s.p.src; f.target = "_blank"; f.rel = "noopener noreferrer";
+    const f = el("a", null, s.p.o ? "fiche OpenStreetMap" : "fiche officielle"); f.href = s.p.src; f.target = "_blank"; f.rel = "noopener noreferrer";
     links.append(a, " · ", f);
     body.append(links);
     li.append(body);
@@ -390,15 +512,25 @@ function render(plan, label) {
   tl.append(liN);
   box.append(tl);
 
-  const live = el("div"); live.id = "live";
-  box.append(live);
-  const goBtn = el("button", "btn", "C'est parti, suivez-moi"); goBtn.type = "button";
-  goBtn.onclick = () => follow(plan, start, goBtn);
+  const share = el("button", "btn ghost", "Envoyer ce parcours"); share.type = "button";
+  share.onclick = async () => {
+    const data = { title: "Trekr", text: `${Math.round(plan.total)} minutes, ${plan.stops.length} lieux : ${plan.stops.map((s) => s.p.n).join(", ")}`, url: location.href };
+    try { if (navigator.share) await navigator.share(data); else { await navigator.clipboard.writeText(location.href); share.textContent = "Lien copié"; } } catch {}
+  };
   const again = el("button", "btn ghost", "Composer un autre parcours"); again.type = "button";
-  again.onclick = () => { if (state.watch !== null) navigator.geolocation.clearWatch(state.watch); location.reload(); };
-  box.append(goBtn, again);
+  again.onclick = () => { if (state.watch !== null) navigator.geolocation.clearWatch(state.watch); history.replaceState(null, "", location.pathname); location.reload(); };
+  box.append(share, again);
   window.scrollTo(0, 0);
 }
+
+/* Parcours reçu par lien : on le recompose à l'identique (mêmes lieu, envie, durée et heure). */
+(function fromLink() {
+  const q = new URLSearchParams(location.hash.slice(1));
+  if (!q.get("la")) return;
+  state.T = +q.get("t") || 40; state.envie = ENVIES[q.get("e")] ? q.get("e") : "surprise"; state.mode = q.get("m") === "connu" ? "connu" : "calme";
+  const h = q.get("h") ? new Date(q.get("h")) : new Date();
+  compose(+q.get("la"), +q.get("lo"), q.get("n") || "ce point", false, isNaN(h) ? new Date() : h);
+})();
 
 /* Position en direct : un seul suivi GPS, qui alimente le point bleu et, pendant la balade, le guidage. */
 function track(onError) {

@@ -11,6 +11,36 @@ Donc : on dit combien de temps on a (20/40/60/90 min) ; Trekr compose une
 boucle a pied depuis la position, minute par minute, qui ecarte les lieux
 tres connus, et ramene a l'heure. Suivi en direct optionnel.
 
+## Audit utilisateur du 11 novembre 2026 et refonte du 12
+
+Constat (parcours reel sur telephone, canal Saint-Martin a 23h37) : l'outil
+proposait un jardin et un atelier de peinture a minuit, aucun cafe, aucune
+raison d'y aller, bouton principal a deux ecrans de defilement.
+Refonte : on choisit une ENVIE (cafe au calme, verdure, beau a voir, pause
+gourmande, livres et galeries, boire un verre, surprise), une duree, une
+heure de depart (maintenant ou plus tard). Trekr ne propose que ce qui est
+ouvert au moment du passage.
+
+- sources/osm_paris.json : 13 324 lieux de vie OpenStreetMap (Overpass,
+  bbox Paris : cafes, bars, boulangeries, patisseries, librairies,
+  chocolateries, fromageries, glaciers, galeries, art de rue, points de vue,
+  fontaines). Integres par scripts/tuiles.py (champ o:1, oh = horaires,
+  ter = terrasse, par = artiste). Les elements avec tag "brand" (chaines)
+  sont ecartes. Si overpass-api.de repond 502, reessayer ou utiliser
+  overpass.private.coffee.
+- index.html : horaires() lit la syntaxe opening_hours courante (jours,
+  plages, apres minuit, off ; les regles PH/SH sont ignorees ; formes
+  complexes -> inconnu). etat() : ouvert sur / ouvert probable (HABITUEL
+  par categorie, signale "a verifier") / ferme. build() : cout = marche +
+  repetition + poids de l'envie + notoriete + incertitude ; une pause
+  (cafe, bar, boulangerie...) par parcours, deux a 90 min ; deux oeuvres
+  d'art de rue au plus. raisons() : une raison par lieu, faits seulement.
+- Lien partageable : le parcours est dans l'adresse (#la, lo, t, e, m, h, n)
+  et se recompose a l'identique. Bouton "Envoyer ce parcours".
+- "C'est parti" est juste sous la carte.
+- NE PAS affirmer qu'un cafe est bon ni "independant" : on sait seulement
+  qu'il n'a pas de tag de chaine.
+
 ## Fichiers
 
 - site/index.html : "J'ai X minutes". build() = boucle gloutonne (marche,
