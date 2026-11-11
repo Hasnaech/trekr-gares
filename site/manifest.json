@@ -1,0 +1,10 @@
+{
+  "name": "Trekr : j'ai 40 minutes",
+  "short_name": "Trekr",
+  "description": "Une balade à pied vers des lieux ouverts et peu connus, et retour à l'heure.",
+  "start_url": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#1e3a5f",
+  "lang": "fr"
+}

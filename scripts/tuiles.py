@@ -4,7 +4,7 @@ dans site/data/t/<i>_<j>.json, pour que le telephone ne charge que les lieux
 autour de lui. i = floor(lat / 0.1), j = floor(lon / 0.1).
 Usage : python3 scripts/tuiles.py
 """
-import json, math, os, shutil, collections
+import glob, json, math, os, shutil, collections
 
 ROOT = os.path.join(os.path.dirname(__file__), "..")
 
@@ -66,6 +66,12 @@ def main():
             tuiles[(math.floor(la * 10), math.floor(lo * 10))].append(item)
             n_osm += 1
         print(n_osm, "lieux de vie OpenStreetMap ajoutes")
+    # Villes preparees hors de Paris (scripts/ville.py) : deja au format du site.
+    for f in sorted(glob.glob(os.path.join(ROOT, "sources", "villes", "*.json"))):
+        ville = json.load(open(f, encoding="utf-8"))
+        for item in ville:
+            tuiles[(math.floor(item["la"] * 10), math.floor(item["lo"] * 10))].append(item)
+        print(os.path.basename(f), ":", len(ville), "lieux")
     out = os.path.join(ROOT, "site", "data", "t")
     shutil.rmtree(out, ignore_errors=True)
     os.makedirs(out)
